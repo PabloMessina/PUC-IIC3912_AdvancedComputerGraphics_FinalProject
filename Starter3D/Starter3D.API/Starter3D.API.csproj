@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3567CAD0-DE95-4BA8-98DE-750B75DCB45A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Starter3D.API</RootNamespace>
+    <AssemblyName>Starter3D.API</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2|AnyCPU'">
+    <OutputPath>bin\Release2\</OutputPath>
+    <Optimize>true</Optimize>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <Optimize>true</Optimize>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2|x64'">
+    <OutputPath>bin\x64\Release2\</OutputPath>
+    <Optimize>true</Optimize>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="netDxf, Version=0.9.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\netDXF.0.9.3\lib\netDxf.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>..\libraries\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="controller\IController.cs" />
+    <Compile Include="geometry\Curve.cs" />
+    <Compile Include="geometry\IInstancedMesh.cs" />
+    <Compile Include="geometry\InstancedMesh.cs" />
+    <Compile Include="geometry\loaders\DxfMeshLoader.cs" />
+    <Compile Include="geometry\Points.cs" />
+    <Compile Include="geometry\primitives\Cube.cs" />
+    <Compile Include="geometry\primitives\IPrimitiveFactory.cs" />
+    <Compile Include="geometry\primitives\PrimitiveFactory.cs" />
+    <Compile Include="resources\IDataNode.cs" />
+    <Compile Include="resources\IMaterial.cs" />
+    <Compile Include="resources\IMaterialFactory.cs" />
+    <Compile Include="resources\IResource.cs" />
+    <Compile Include="resources\IResourceManager.cs" />
+    <Compile Include="resources\IShader.cs" />
+    <Compile Include="resources\IShaderFactory.cs" />
+    <Compile Include="resources\ITexture.cs" />
+    <Compile Include="resources\ITextureFactory.cs" />
+    <Compile Include="resources\Material.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="math\BoundingBox.cs" />
+    <Compile Include="math\BoundingSphere.cs" />
+    <Compile Include="math\Plane.cs" />
+    <Compile Include="math\Ray.cs" />
+    <Compile Include="geometry\factories\MeshLoaderFactory.cs" />
+    <Compile Include="renderer\IRenderer.cs" />
+    <Compile Include="resources\MaterialFactory.cs" />
+    <Compile Include="resources\ResourceManager.cs" />
+    <Compile Include="resources\Shader.cs" />
+    <Compile Include="resources\ShaderFactory.cs" />
+    <Compile Include="resources\Texture.cs" />
+    <Compile Include="resources\TextureFactory.cs" />
+    <Compile Include="resources\XmlDataNode.cs" />
+    <Compile Include="scene\IScene.cs" />
+    <Compile Include="scene\nodes\AmbientLight.cs" />
+    <Compile Include="scene\nodes\BaseSceneNode.cs" />
+    <Compile Include="scene\nodes\CameraNode.cs" />
+    <Compile Include="scene\nodes\IRenderElement.cs" />
+    <Compile Include="scene\persistence\factories\SceneDataNodeFactory.cs" />
+    <Compile Include="scene\nodes\DirectionalLight.cs" />
+    <Compile Include="scene\Scene.cs" />
+    <Compile Include="utils\Configuration.cs" />
+    <Compile Include="utils\Extensions.cs" />
+    <Compile Include="geometry\Face.cs" />
+    <Compile Include="geometry\factories\FaceFactory.cs" />
+    <Compile Include="geometry\ICurve.cs" />
+    <Compile Include="scene\persistence\ISceneDataNode.cs" />
+    <Compile Include="geometry\IFace.cs" />
+    <Compile Include="geometry\factories\IFaceFactory.cs" />
+    <Compile Include="geometry\IMesh.cs" />
+    <Compile Include="geometry\factories\IMeshFactory.cs" />
+    <Compile Include="geometry\loaders\IMeshLoader.cs" />
+    <Compile Include="geometry\factories\IMeshLoaderFactory.cs" />
+    <Compile Include="geometry\IPoints.cs" />
+    <Compile Include="geometry\IPolygon.cs" />
+    <Compile Include="scene\nodes\ISceneNode.cs" />
+    <Compile Include="scene\nodes\factories\ISceneNodeFactory.cs" />
+    <Compile Include="geometry\IShape.cs" />
+    <Compile Include="geometry\factories\IShapeFactory.cs" />
+    <Compile Include="geometry\ISurface.cs" />
+    <Compile Include="geometry\IVertex.cs" />
+    <Compile Include="scene\persistence\factories\ISceneDataNodeFactory.cs" />
+    <Compile Include="geometry\factories\IVertexFactory.cs" />
+    <Compile Include="scene\persistence\ISceneReader.cs" />
+    <Compile Include="scene\nodes\LightNode.cs" />
+    <Compile Include="geometry\Mesh.cs" />
+    <Compile Include="geometry\factories\MeshFactory.cs" />
+    <Compile Include="geometry\loaders\ObjMeshLoader.cs" />
+    <Compile Include="scene\nodes\OrtographicCamera.cs" />
+    <Compile Include="scene\nodes\PerspectiveCamera.cs" />
+    <Compile Include="scene\nodes\PointLight.cs" />
+    <Compile Include="scene\nodes\factories\SceneNodeFactory.cs" />
+    <Compile Include="geometry\factories\ShapeFactory.cs" />
+    <Compile Include="scene\nodes\ShapeNode.cs" />
+    <Compile Include="utils\IConfiguration.cs" />
+    <Compile Include="utils\Enums.cs" />
+    <Compile Include="geometry\Triangle.cs" />
+    <Compile Include="geometry\Vertex.cs" />
+    <Compile Include="geometry\factories\VertexFactory.cs" />
+    <Compile Include="scene\persistence\XmlSceneDataNode.cs" />
+    <Compile Include="scene\persistence\XmlSceneReader.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+</Project>

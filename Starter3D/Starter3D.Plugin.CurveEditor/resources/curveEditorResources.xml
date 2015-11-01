@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Resources>
+  <Shaders>
+    <BaseShader key="canvas" vertex="canvasVertex" fragment="canvasFragment" vectors="color"/>
+  </Shaders>
+  <Materials>
+    <BaseMaterial key="lineMaterial" shader='canvas' color='1,1,1'/>
+    <BaseMaterial key="pointMaterial" shader='canvas' color='1,1,0'/>
+  </Materials>
+</Resources>
