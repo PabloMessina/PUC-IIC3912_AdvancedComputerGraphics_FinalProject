@@ -85,6 +85,7 @@
   <ItemGroup>
     <Content Include="resources\curveEditorResources.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="shaders\direct3d\canvasFragment.fx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
