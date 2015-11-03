@@ -131,5 +131,19 @@ namespace Starter3D.API.scene.nodes
       var matrix =  scale * rotation * translation;
       return matrix;
     }
+
+    public ShapeNode Clone()
+    {
+        ShapeNode clone = new ShapeNode(_shapeFactory, _resourceManager, _scale, _position);
+        clone.Parent = this.Parent;
+        clone._shape =  this._shape.Clone();
+        return clone;
+    }
+
+    public Vector3 CamaraToModel3(Vector4 vector)
+    {
+        vector = Vector4.Transform(vector, GetModelTransform().Inverted());
+        return new Vector3(vector.X, vector.Y, vector.Z);
+    }
   }
 }

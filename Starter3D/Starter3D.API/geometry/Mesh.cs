@@ -198,6 +198,17 @@ namespace Starter3D.API.geometry
       return FacesCount * 3;
     }
 
+    public IShape Clone()
+    {
+        Mesh clone = new Mesh(_meshLoader, this.Name + "c");
+        foreach (Vertex v in this._vertices)
+            clone.AddVertex(v);
+        foreach (Face f in this._faces)
+            clone.AddFace(f);
+
+        clone._material = this._material;
+        return clone;
+    }
    
   }
 }

@@ -40,5 +40,7 @@ namespace Starter3D.API.geometry
     /// <param name="renderer">Renderer that will perform the rendering</param>
     /// <param name="modelTransform">Model to world transformation for this shape</param>
     void Render(IRenderer renderer, Matrix4 modelTransform);
+
+    IShape Clone();
   }
 }

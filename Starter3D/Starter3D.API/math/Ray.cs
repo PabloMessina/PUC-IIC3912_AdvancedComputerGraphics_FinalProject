@@ -1,5 +1,7 @@
 ﻿using System;
 using OpenTK;
+using Starter3D.API.geometry;
+using System.Collections.Generic;
 
 namespace Starter3D.API.math
 {
@@ -13,6 +15,63 @@ namespace Starter3D.API.math
     {
       Position = position;
       Direction = direction.Normalized();
+    }
+
+    public static bool Intersect(Ray ray, IMesh mesh, out float distance)
+    {
+        distance = float.MaxValue;
+        bool retorno = false;
+        foreach (IPolygon triangle in mesh.GetTriangles())
+        {
+            IEnumerable<IVertex> vertex = triangle.Vertices;
+            IVertex[] vertex_array = new IVertex[3];
+            int i = 0;
+            foreach (Vertex v in vertex)
+            {
+                vertex_array[i] = v;
+                i++;
+            }
+            float distance_t = 0.0F;
+            if (Intersect(ray, vertex_array, out distance_t))
+            {
+                if (distance > distance_t && distance_t > Precission)
+                {
+                    distance = distance_t;
+                    retorno = true;
+                }
+            }
+        }
+        return retorno;
+    }
+
+    public static bool Intersect(Ray ray, IVertex[] vertex, out float distance)
+    {
+        distance = 0.0F;
+
+        float D = determinante(ray.Direction, (vertex[1].Position - vertex[0].Position), (vertex[2].Position - vertex[0].Position));
+        float Dx = determinante((vertex[0].Position - ray.Position), (vertex[1].Position - vertex[0].Position), (vertex[2].Position - vertex[0].Position));
+        float Dy = determinante(ray.Direction, (vertex[0].Position - ray.Position), (vertex[2].Position - vertex[0].Position));
+        float Dz = determinante(ray.Direction, (vertex[1].Position - vertex[0].Position), (vertex[0].Position - ray.Position));
+
+        float t = Dx / D;
+
+        float beta = -Dy / D;
+        float gama = -Dz / D;
+        float alfa = 1 - beta - gama;
+        if (alfa > 0 && alfa < 1 && t > 0 && beta > 0 && gama > 0)
+        {
+            distance = t;
+            return true;
+        }
+        return false;
+    }
+
+    private static float determinante(Vector3 v1, Vector3 v2, Vector3 v3)
+    {
+        float det_of_x = v1.X * v2.Y * v3.Z + v1.Y * v2.Z * v3.X + v1.Z * v2.X * v3.Y;
+        det_of_x -= v3.X * v2.Y * v1.Z + v3.Y * v2.Z * v1.X + v3.Z * v2.X * v1.Y;
+
+        return det_of_x;
     }
 
     public static bool Intersect(Ray ray, BoundingBox box, out float distance){

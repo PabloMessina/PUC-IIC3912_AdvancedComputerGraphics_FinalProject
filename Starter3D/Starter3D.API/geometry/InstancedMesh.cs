@@ -2,6 +2,7 @@
 using OpenTK;
 using Starter3D.API.renderer;
 using Starter3D.API.resources;
+using System;
 
 namespace Starter3D.API.geometry
 {
@@ -64,6 +65,11 @@ namespace Starter3D.API.geometry
     public void AddInstance(Matrix4 instanceMatrix)
     {
       _instanceMatrices.Add(instanceMatrix);
+    }
+
+    public IShape Clone()
+    {
+        throw new NotImplementedException();
     }
   }
 }

@@ -92,6 +92,10 @@
       <Project>{c9d87433-bbff-40bb-99ea-9773636d3e11}</Project>
       <Name>Starter3D.Plugin.SimpleMaterialEditor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Starter3D.Plugin.UniverseSimulator\Starter3D.Plugin.UniverseSimulator.csproj">
+      <Project>{b3ed14dd-69f5-49f3-8ef7-bf93a576ba16}</Project>
+      <Name>Starter3D.Plugin.UniverseSimulator</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Starter3D.Renderers\Starter3D.Renderers.csproj">
       <Project>{78127754-23c1-4d69-a528-ae46cad6aec0}</Project>
       <Name>Starter3D.Renderers</Name>
@@ -120,7 +124,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Autofac">
-      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
+      <HintPath>..\libraries\Autofac.dll</HintPath>
     </Reference>
     <Reference Include="Flaxen.SlimDXControlLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>

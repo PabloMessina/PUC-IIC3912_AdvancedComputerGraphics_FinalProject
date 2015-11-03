@@ -1,0 +1,14 @@
+﻿<UserControl x:Class="Starter3D.Plugin.UniverseSimulator.LeftToolView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="45">
+    <Grid Background="#FFECECEC" Width="45" HorizontalAlignment="Left">
+        <Button Content="N" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click_1" ToolTip="Navigate(1)" Background="#FFF3F2F2"/>
+        <Button Content="I" HorizontalAlignment="Left" Margin="5,45,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click_2" ToolTip="Insert(2)" Background="#FFF3F2F2"/>
+        <Button Content="P" HorizontalAlignment="Left" Margin="5,85,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click_3" ToolTip="Pick(3)" Background="#FFF3F2F2"/>
+            
+    </Grid>
+</UserControl>

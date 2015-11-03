@@ -3,6 +3,7 @@ using System.Linq;
 using OpenTK;
 using Starter3D.API.renderer;
 using Starter3D.API.resources;
+using System;
 
 namespace Starter3D.API.geometry
 {
@@ -98,6 +99,11 @@ namespace Starter3D.API.geometry
         data.Add(i);
       }
       return data;
+    }
+
+    public IShape Clone()
+    {
+        throw new NotImplementedException();
     }
   }
 }

@@ -61,9 +61,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="netDxf, Version=0.9.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\netDXF.0.9.3\lib\netDxf.dll</HintPath>
+    <Reference Include="netDxf">
+      <HintPath>..\libraries\netDxf.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\libraries\OpenTK.dll</HintPath>

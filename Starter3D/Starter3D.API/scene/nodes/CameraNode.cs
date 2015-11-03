@@ -30,6 +30,16 @@ namespace Starter3D.API.scene.nodes
       get { return _order; }
     }
 
+    public Vector3 Up
+    {
+        get { return _up; }
+    }
+
+    public Vector3 Target
+    {
+        get { return _target; }
+    }
+
     public Vector3 Position
     {
       get { return _position; }
@@ -167,5 +177,16 @@ namespace Starter3D.API.scene.nodes
     }
 
     protected abstract Matrix4 CreateProjectionMatrix();
+
+    public Vector4 ImageToWorld(Vector4 vector)
+    {
+        Matrix4 m = CreateProjectionMatrix().Inverted();
+        vector = Vector4.Transform(vector, m);
+        vector = vector / vector.W;
+        m = GetViewMatrix().Inverted();
+        vector = Vector4.Transform(vector, m);
+
+        return vector;
+    }
   }
 }
