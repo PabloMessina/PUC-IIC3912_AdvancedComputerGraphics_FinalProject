@@ -102,6 +102,8 @@ namespace Starter3D.Plugin.UniverseSimulator
         }
 
         //Metodos publicos estaticos auxiliares
+
+        //Metodo para encontrar un planeta dependiendo del shape
         public static Planet FindPlanet(List<Planet> planets, ShapeNode shape)
         {
             foreach (Planet planet in planets)

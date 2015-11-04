@@ -82,7 +82,7 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         private void SavePlanet(object sender, RoutedEventArgs e)
         {
-            //Validar valores correctos         
+            //Falta validar valores correctos         
             _planet.UpdatePlanet(ToFloat(this.Radius.Text), ToFloat(this.Mass.Text), new OpenTK.Vector3(ToFloat(this.VelocityVectorX.Text), ToFloat(this.VelocityVectorY.Text), ToFloat(this.VelocityVectorZ.Text)), ToFloat(this.VelocityMagnitude.Text), (bool)this.HasGravity.IsChecked, this.NameBox.Text);
             _planet.UpdateMaterial(_controller.GetMaterial(this.Materials.SelectedItem.ToString()));
             _controller.SetTooltip("Correctly Saved");

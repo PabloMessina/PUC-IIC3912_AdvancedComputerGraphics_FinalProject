@@ -23,6 +23,7 @@ namespace Starter3D.Plugin.UniverseSimulator
 
     public class UniverseSimulatorController : IController
     {
+        ///////////////////////////////Atributos///////////////////////////////////////
         private const string ScenePath = @"scenes/scene.xml";
         private const string ResourcePath = @"resources/resources.xml";
 
@@ -61,7 +62,8 @@ namespace Starter3D.Plugin.UniverseSimulator
         //Listas con los planetas
         private List<Planet> _planets = new List<Planet>();
         private ShapeNode _base;
-        
+
+        ///////////////////////////////Metodos publicos que se usan desde las distintas views (left, right, bottom)///////////////////////////////////////
         //Metodos para actualizar los estados de la barra izquierda
         public void ChangeMode(Mode mode)
         {
@@ -84,7 +86,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             return null;
         }
 
-        //Auxiliares de camara
+        ///////////////////////////////Métodos auxiliares de camara///////////////////////////////////////        
         private Matrix4 getProjectionMatrix(CameraNode camera)
         {
             if (camera is PerspectiveCamera)
@@ -126,7 +128,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             Vector3 mousePoint = currCamera.Position + (m_mundo.Xyz - currCamera.Position).Normalized() * 15;
             return mousePoint;
         }
-        
+
+        ///////////////////////////////Métodos heredados de IController///////////////////////////////////////
         //Metodos heredados de IController
         public int Width
         {
@@ -275,9 +278,8 @@ namespace Starter3D.Plugin.UniverseSimulator
 
                         //Setear el planeta en la vista derecha
                         _rightView.SetPlanet(Planet.FindPlanet(_planets, _selected));
-
-                        //Guardo su material antiguo en una variable temporal
                         
+                        //Seteo el material de selección                       
                         _selected.Shape.Material = _selectedMaterial;
                                                 
                         _hover = null;
