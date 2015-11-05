@@ -78,6 +78,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             this.VelocityMagnitude.Text = "" + _planet.Velocity.Length;
 
             this.HasGravity.IsChecked = _planet.Gravity;
+
+            this.Materials.SelectedItem = _planet.Material.Name;
         }
 
         private void SavePlanet(object sender, RoutedEventArgs e)

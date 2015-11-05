@@ -255,6 +255,7 @@ namespace Starter3D.Plugin.UniverseSimulator
                     ShapeNode planetNode = _base.Clone();
                     planetNode.Position = mousePoint;
                     planetNode.Shape.Material = _materialDefault;
+                    planetNode.Scale = new Vector3(1, 1, 1);
                     planetNode.Configure(_renderer);
                     _scene.AddShape(planetNode);
 
@@ -306,7 +307,7 @@ namespace Starter3D.Plugin.UniverseSimulator
                 _isMouseDownRight = false;
 
             if (_isMouseDownLeft)
-            _isMouseDownLeft = false;
+                _isMouseDownLeft = false;
         }
 
         public void MouseWheel(int delta, int x, int y)
