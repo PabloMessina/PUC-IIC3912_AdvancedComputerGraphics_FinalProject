@@ -37,3 +37,20 @@ En la clase UniverseSimulatorController lo dividí en 4 secciones
 * Metodos auxiliares de la camara
 * Metodos publicos que se acceden de las vistas para actualizar algunos estados
 * Metodos heredados de IController
+
+
+# Semana del 6/11 - 12/11
+
+## Avances
+
+* Arreglar dropping/dragging para que todo esté en el plano z = 0
+* Refactorizar vista de la derecha para que funcione con data-binding
+* Hacer vista de la derecha más responsive
+* Agregar modo de simulación con RungeKutta
+* Agregar collision detection usando el algoritmo de ordenación y barrido de bounding boxes
+* Agregar skybox
+* Agregar más texturas
+
+## Detalles técnicos
+
+Hay muchos cambios, describirlos todos acá puede resultar abrumador. Recomiendo leer los comentarios, los nombres de las variables, los nombres de los métodos y ver cómo las cosas se van llamando entre sí. Las mayores modificaciones / refactorizaciones hechas sobre el código anterior se encuentran en la implementación de data-binding (aquí una buena referencia: http://www.codeproject.com/Articles/819294/WPF-MVVM-step-by-step-Basics-to-Advance-Level)
