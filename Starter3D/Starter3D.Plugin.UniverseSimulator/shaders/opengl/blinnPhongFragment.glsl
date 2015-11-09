@@ -2,7 +2,7 @@
 
 precision highp float;
 
-const int maxNumberOfLights = 10;
+const int maxNumberOfLights = 1000;
 uniform float activeNumberOfPointLights;
 uniform float activeNumberOfDirectionalLights;
 uniform vec3 pointLightPositions[maxNumberOfLights];

@@ -142,8 +142,7 @@ namespace Starter3D.API.scene.nodes
 
     public Vector3 CamaraToModel3(Vector4 vector)
     {
-        vector = Vector4.Transform(vector, GetModelTransform().Inverted());
-        return new Vector3(vector.X, vector.Y, vector.Z);
+        return Vector4.Transform(vector, GetModelTransform().Inverted()).Xyz;
     }
   }
 }

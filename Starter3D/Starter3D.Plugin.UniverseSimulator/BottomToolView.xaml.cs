@@ -24,10 +24,5 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             InitializeComponent();
         }
-
-        public void UpdateTooltip(string s)
-        {
-            this.TooltipLabel.Content = s;
-        }
     }
 }

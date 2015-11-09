@@ -5,30 +5,35 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid Background="#FFECECEC" Width="300" HorizontalAlignment="Right">
+    <Grid Background="#FFECECEC" Width="290" HorizontalAlignment="Right" Margin="0,0,10,-41">
         <Label Content="Name" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="100"/>
         <Label Content="Radius" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top" Width="100"/>
         <Label Content="Mass" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Width="100"/>
         <Label Content="Velocity Vector" HorizontalAlignment="Left" Margin="10,100,0,0" VerticalAlignment="Top" Width="100"/>
         <Label Content="Velocity Magnitude" HorizontalAlignment="Left" Margin="10,130,0,0" VerticalAlignment="Top" Width="120"/>
-        <Label Content="Gravity" HorizontalAlignment="Left" Margin="10,160,0,0" VerticalAlignment="Top" Width="100"/>
+        <Label Content="Has Gravity" HorizontalAlignment="Left" Margin="16,161,0,0" VerticalAlignment="Top" Width="72"/>
+        <Label Content="Has Light" HorizontalAlignment="Left" Margin="152,161,0,0" VerticalAlignment="Top" Width="61"/>
+
+        <Label Content="Material" HorizontalAlignment="Left" Margin="22,199,0,0" VerticalAlignment="Top" Width="100"/>
+
+        <Rectangle Fill="Black" HorizontalAlignment="Left" Height="2" Margin="0,192,0,0" Stroke="Black" VerticalAlignment="Top" Width="280"/>
+
+        <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="20" Margin="152,14,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Name}" IsEnabled="{Binding HasCelestialBody}"/>
+        <TextBox x:Name="Radius" HorizontalAlignment="Left" Height="20" Margin="152,44,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Radius, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <TextBox x:Name="Mass" HorizontalAlignment="Left" Height="20" Margin="152,74,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Mass, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <TextBox x:Name="VelocityVectorX" HorizontalAlignment="Left" Height="20" Margin="152,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityX, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <TextBox x:Name="VelocityVectorY" HorizontalAlignment="Left" Height="20" Margin="195,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityY, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <TextBox x:Name="VelocityVectorZ" HorizontalAlignment="Left" Height="20" Margin="239,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityZ, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <TextBox x:Name="VelocityMagnitude" HorizontalAlignment="Left" Height="20" Margin="152,134,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding VelocityMagnitude, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <CheckBox x:Name="HasGravity" Content="" HorizontalAlignment="Left" Margin="88,168,0,0" VerticalAlignment="Top" IsChecked="{Binding HasGravity}" IsEnabled="{Binding HasCelestialBody}"/>
+        <CheckBox x:Name="HasLight" Content="" HorizontalAlignment="Left" Margin="213,168,0,0" VerticalAlignment="Top" IsChecked="{Binding HasLight}" IsEnabled="{Binding HasCelestialBody}"/>
         
-        <Label Content="Material" HorizontalAlignment="Left" Margin="10,190,0,0" VerticalAlignment="Top" Width="100"/>
-
-        <Rectangle Fill="Black" HorizontalAlignment="Left" Height="2" Margin="10,189,0,0" Stroke="Black" VerticalAlignment="Top" Width="280"/>
-
-        <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="20" Margin="152,14,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" IsEnabled="False"/>
-        <TextBox x:Name="Radius" HorizontalAlignment="Left" Height="20" Margin="152,44,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" IsEnabled="False"/>
-        <TextBox x:Name="Mass" HorizontalAlignment="Left" Height="20" Margin="152,74,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" IsEnabled="False"/>
-        <TextBox x:Name="VelocityVectorX" HorizontalAlignment="Left" Height="20" Margin="152,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33" IsEnabled="False"/>
-        <TextBox x:Name="VelocityVectorY" HorizontalAlignment="Left" Height="20" Margin="195,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33" IsEnabled="False"/>
-        <TextBox x:Name="VelocityVectorZ" HorizontalAlignment="Left" Height="20" Margin="239,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33" IsEnabled="False"/>
-        <TextBox x:Name="VelocityMagnitude" HorizontalAlignment="Left" Height="20" Margin="152,134,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" IsEnabled="False"/>
-        <CheckBox x:Name="HasGravity" Content="" HorizontalAlignment="Left" Margin="152,166,0,0" VerticalAlignment="Top" IsEnabled="False"/>
-        <ComboBox x:Name="Materials" HorizontalAlignment="Left" Margin="152,196,0,0" VerticalAlignment="Top" Width="120" IsEnabled="False"/>
-        <Button x:Name="SaveButton" Content="Save" HorizontalAlignment="Left" Margin="152,223,0,0" VerticalAlignment="Top" Width="120" Click="SavePlanet" IsEnabled="False"/>
+        <ComboBox x:Name="Materials" HorizontalAlignment="Left" Margin="160,203,0,0" VerticalAlignment="Top" Width="120"  ItemsSource="{Binding Materials}" DisplayMemberPath="Name" SelectedValue="{Binding Material}"  IsEnabled="{Binding HasCelestialBody}"/>        
         
+        <Button x:Name="SaveButton" Content="Save" HorizontalAlignment="Left" Margin="28,246,0,0" VerticalAlignment="Top" Width="120" Click="SaveButton_Click"  IsEnabled="{Binding HasChanges}"/>
+        <Button x:Name="ResetButton" Content="Reset" HorizontalAlignment="Left" Margin="28,273,0,0" VerticalAlignment="Top" Width="120" Click="ResetButton_Click" IsEnabled="{Binding HasChanges}"/>
 
+        <TextBlock x:Name="FeedbackTextBlock" HorizontalAlignment="Left" Margin="22,315,0,0" VerticalAlignment="Top" Width="237" Height="auto" Text="{Binding Feedback}" Foreground="Red"/>
 
 
     </Grid>

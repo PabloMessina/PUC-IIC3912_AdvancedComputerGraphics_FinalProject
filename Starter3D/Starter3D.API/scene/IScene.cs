@@ -24,7 +24,10 @@ namespace Starter3D.API.scene
     void ClearShapes();
     void ClearLights();
     void ClearCameras();
-    
+
+    void RemoveShape(ShapeNode shape);
+    void RemoveLight(PointLight light);
+
     void Configure(IRenderer renderer);
     void Render(IRenderer renderer);
     

@@ -7,7 +7,7 @@
              d:DesignHeight="30" d:DesignWidth="500">
     <Border BorderBrush="Gray" BorderThickness="1">
         <Grid Background="#FFECECEC">
-            <Label x:Name="TooltipLabel" Content="Left click to drag around" HorizontalAlignment="Left" Margin="12,2,0,0" VerticalAlignment="Top" Width="476"/>
+            <Label x:Name="TooltipLabel" Content="{Binding TooltipMessage}" HorizontalAlignment="Left" Margin="12,2,0,0" VerticalAlignment="Top" Width="476"/>
         </Grid>
     </Border>
 </UserControl>
