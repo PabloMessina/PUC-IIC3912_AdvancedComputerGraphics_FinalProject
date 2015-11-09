@@ -28,34 +28,14 @@ namespace Starter3D.Plugin.UniverseSimulator
             _controller = controller;
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (_controller != null)
             {
-                _controller.ChangeMode(Mode.Navigate);
-                _controller.SetTooltip("Left click to drag around");
+                var btn = (Button)sender;
+                _controller.SetMode((Mode)btn.Tag);
             }
-
-        }
-
-        private void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            if (_controller != null)
-            {
-                _controller.ChangeMode(Mode.Insert);
-                _controller.SetTooltip("Left click insert a new planet");
-            }
-        }
-
-        private void Button_Click_3(object sender, RoutedEventArgs e)
-        {
-            if (_controller != null)
-            {
-                _controller.ChangeMode(Mode.Pick);
-                _controller.SetTooltip("Left click to select a planet. Hold down to move it around");
-            }
-        }
-        
+        }       
       
     }
 }
