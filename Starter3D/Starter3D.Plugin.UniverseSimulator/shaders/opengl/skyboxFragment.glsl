@@ -39,7 +39,7 @@ void main(void)
             ma = _rx;
 			u = (sc / ma + 1) / 2;
 			v = (tc / ma + 1) / 2;
-			outFragColor = texture(leftTex, vec2(u,v));
+			outFragColor = texture(rightTex, vec2(u,v));
 		}
 		else 
 		{
@@ -48,15 +48,16 @@ void main(void)
             ma = _rx;
 			u = (sc / ma + 1) / 2;
 			v = (tc / ma + 1) / 2;
-			outFragColor = texture(rightTex, vec2(u,v));
+			outFragColor = texture(leftTex, vec2(u,v));
 		}
 	}
 	else if (_ry > _rx && _ry > _rz) 
 	{
 		if (ry > 0)
         {
-            sc = -rx;
-            tc = rz;
+			sc = rx;
+			tc = rz;
+
             ma = _ry;
 			u = (sc / ma + 1) / 2;
 			v = (tc / ma + 1) / 2;
@@ -64,8 +65,9 @@ void main(void)
         }
         else
         {
-            sc = -rx;
-            tc = -rz;
+			sc = rx;
+			tc = -rz;
+
             ma = _ry;
 			u = (sc / ma + 1) / 2;
 			v = (tc / ma + 1) / 2;

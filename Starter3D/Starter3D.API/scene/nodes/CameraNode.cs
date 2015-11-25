@@ -30,14 +30,24 @@ namespace Starter3D.API.scene.nodes
       get { return _order; }
     }
 
-    public Vector3 Up
-    {
-        get { return _up; }
-    }
-
     public Vector3 Target
     {
         get { return _target; }
+        set
+        {
+            _target = value;
+            _isDirty = true;
+        }
+    }
+
+    public Vector3 Up
+    {
+        get { return _up; }
+        set
+        {
+            _up = value;
+            _isDirty = true;
+        }
     }
 
     public Vector3 Position

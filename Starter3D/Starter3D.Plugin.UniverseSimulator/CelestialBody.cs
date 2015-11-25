@@ -157,7 +157,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             _velocity = new Vector3(1, 0, 0);
             _hasGravity = false;
             _isLightSource = false;
-            _isLightInScene = false;
+            _isLightInScene = false; 
             _name = "No name";
 
             _nextPosition = _position;

@@ -20,6 +20,13 @@ namespace Starter3D.Plugin.UniverseSimulator
 {
     public enum Mode { Navigate, Insert, Pick, Simulate };
 
+    struct CameraBackup
+    {
+        public Vector3 Position;
+        public Vector3 Target;
+        public Vector3 Up;
+    }
+
     public class UniverseSimulatorController : ViewModelBase, IController
     {
         #region Atributos
@@ -78,12 +85,18 @@ namespace Starter3D.Plugin.UniverseSimulator
         
         private string _tooltipMessage = "";
 
+        private float _rotAngle = (float)(Math.PI / 180 * 2f);
+        private float _camVelocity = 30f;
+        private CameraBackup _camBackup;
+
         #endregion
 
         ///////////////////////////////Metodos publicos que se usan desde las distintas views (left, right, bottom)///////////////////////////////////////
         //Metodos para actualizar los estados de la barra izquierda
 
         #region Métodos auxiliares de cámara   
+
+        #region Métodos matriciales
         private Matrix4 getProjectionMatrix(CameraNode camera)
         {
             if (camera is PerspectiveCamera)
@@ -103,6 +116,164 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             return Matrix4.LookAt(camera.Position, camera.Target, camera.Up);
         }
+        #endregion
+
+        #region Movimiento y rotación de cámara
+        private void rotateCameraDownward(CameraNode cam)
+        {
+            var forwardDir = (cam.Target - cam.Position);
+            var horiztonalAxis = Vector3.Cross(forwardDir, cam.Up);
+            var rotMatrix = Quaternion.FromAxisAngle(horiztonalAxis, -_rotAngle);
+            cam.Up = Vector3.Transform(cam.Up, rotMatrix).Normalized();
+            cam.Target = cam.Position + Vector3.Transform(forwardDir, rotMatrix);
+            _cameraDirty = true;
+        }
+
+        private void rotateCameraUpward(CameraNode cam)
+        {
+            var forwardDir = (cam.Target - cam.Position);
+            var horiztonalAxis = Vector3.Cross(forwardDir, cam.Up);
+            var rotMatrix = Quaternion.FromAxisAngle(horiztonalAxis, _rotAngle);
+            cam.Up = Vector3.Transform(cam.Up, rotMatrix).Normalized();
+            cam.Target = cam.Position + Vector3.Transform(forwardDir, rotMatrix);
+            _cameraDirty = true;
+        }
+
+        private void rotateCameraRightward(CameraNode cam)
+        {
+            var forwardDir = (cam.Target - cam.Position);
+            var verticalAxis = cam.Up;
+            var rotMatrix = Quaternion.FromAxisAngle(verticalAxis, -_rotAngle);
+            cam.Target = cam.Position + Vector3.Transform(forwardDir, rotMatrix);
+            _cameraDirty = true;
+        }
+
+        private void rotateCameraLeftward(CameraNode cam)
+        {
+            var forwardDir = (cam.Target - cam.Position);
+            var verticalAxis = cam.Up;
+            var rotMatrix = Quaternion.FromAxisAngle(verticalAxis, _rotAngle);
+            cam.Target = cam.Position + Vector3.Transform(forwardDir, rotMatrix);
+            _cameraDirty = true;
+        }
+        private void rotateCameraClockwise(CameraNode cam)
+        {
+            var forwardAxis = (cam.Target - cam.Position);
+            var rotMatrix = Quaternion.FromAxisAngle(forwardAxis, _rotAngle);
+            cam.Up = Vector3.Transform(cam.Up, rotMatrix).Normalized();
+            _cameraDirty = true;
+        }
+
+        private void rotateCameraCounterClockwise(CameraNode cam)
+        {
+            var forwardAxis = (cam.Target - cam.Position);
+            var rotMatrix = Quaternion.FromAxisAngle(forwardAxis, -_rotAngle);
+            cam.Up = Vector3.Transform(cam.Up, rotMatrix).Normalized();
+            _cameraDirty = true;
+        }
+
+        private void moveCameraRightward(CameraNode cam)
+        {
+            var pos = cam.Position;
+            var target = cam.Target;
+            var forwardDir = (target - pos);
+            forwardDir.NormalizeFast();
+
+            var rightDir = Vector3.Cross(forwardDir, cam.Up);
+            rightDir.NormalizeFast();
+
+            pos += rightDir * _camVelocity;
+            target = pos + forwardDir * 100f;
+
+            cam.Position = pos;
+            cam.Target = target;
+            _cameraDirty = true;
+        }
+
+        private void moveCameraBackward(CameraNode cam)
+        {
+            var pos = cam.Position;
+            var target = cam.Target;
+            var forwardDir = (target - pos);
+            forwardDir.NormalizeFast();
+
+            pos -= forwardDir * _camVelocity;
+            target = pos + forwardDir * 100f;
+
+            cam.Position = pos;
+            cam.Target = target;
+            _cameraDirty = true;
+        }
+
+        private void moveCameraLeftward(CameraNode cam)
+        {
+            var pos = cam.Position;
+            var target = cam.Target;
+            var forwardDir = (target - pos);
+            forwardDir.NormalizeFast();
+
+            var leftDir = Vector3.Cross(cam.Up, forwardDir);
+            leftDir.NormalizeFast();
+
+            pos += leftDir * _camVelocity;
+            target = pos + forwardDir * 100f;
+
+            cam.Position = pos;
+            cam.Target = target;
+            _cameraDirty = true;
+        }
+
+        private void moveCameraForward(CameraNode cam)
+        {            
+            var pos = cam.Position;
+            var target = cam.Target;
+            var forwardDir = (target - pos);
+            forwardDir.NormalizeFast();
+
+            pos += forwardDir * _camVelocity;
+
+            //aseguramos que la cámara no avance más allá del plano z = 100, excepto en simulación
+            if (_mode != Mode.Simulate && pos.Z < 100f) pos.Z = 100f; 
+
+            target = pos + forwardDir * 100f;
+
+            cam.Position = pos;
+            cam.Target = target;
+            _cameraDirty = true;
+        }
+
+        private void moveCameraUpward(CameraNode cam)
+        {
+            var pos = cam.Position;
+            var target = cam.Target;
+            var forwardDir = (target - pos);
+            forwardDir.NormalizeFast();
+
+            pos += cam.Up * _camVelocity;
+            target = pos + forwardDir * 100f;
+
+            cam.Position = pos;
+            cam.Target = target;
+            _cameraDirty = true;
+        }
+
+        private void moveCameraDownward(CameraNode cam)
+        {
+            var pos = cam.Position;
+            var target = cam.Target;
+            var forwardDir = (target - pos);
+            forwardDir.NormalizeFast();
+
+            pos -= cam.Up * _camVelocity;
+            target = pos + forwardDir * 100f;
+
+            cam.Position = pos;
+            cam.Target = target;
+            _cameraDirty = true;
+        }
+
+        #endregion
+
         #endregion
 
         private Vector3 GetMouseWorldPosition(int x, int y)
@@ -132,6 +303,27 @@ namespace Starter3D.Plugin.UniverseSimulator
             var t = -currCamera.Position.Z / dir.Z;
             var mousePoint = currCamera.Position + dir * t;
             return mousePoint;
+        }
+
+        private Vector3 GetMouseWorldPositionOnNearPlane(int x, int y)
+        {
+            //to clipping
+            float adjustedX = (2.0f * (float)x / (float)_width) - 1;
+            float adjustedY = (2.0f * (float)(_height - y) / (float)_height) - 1;
+            var m_clipping = new Vector4(adjustedX, adjustedY, -1, 1);
+
+            //to camera
+            var currCamera = _scene.CurrentCamera;
+            var inverse_projMatrix = getProjectionMatrix(currCamera).Inverted();
+            var m_camera = Vector4.Transform(m_clipping, inverse_projMatrix);
+            m_camera /= m_camera.W;
+            m_camera.Z = -currCamera.NearClip;
+
+            //to world
+            var viewMatrix = getViewMatrix(currCamera);
+            var inverse_viewMatrix = viewMatrix.Inverted();
+            var m_mundo = Vector4.Transform(m_camera, inverse_viewMatrix);
+            return m_mundo.Xyz;
         }
 
 
@@ -335,31 +527,44 @@ namespace Starter3D.Plugin.UniverseSimulator
                 else if (_mode == Mode.Pick)
                 {
                     //Obtengo el punto
-                    float xf = (float)x;
-                    float yf = (float)y;
-                    Vector4 mouse = new Vector4(2F * (xf / _width) - 1F, 2F * ((_height - yf) / _height) - 1F, -1F, 1F);
-                    mouse = _scene.CurrentCamera.ImageToWorld(mouse);
+                    //float xf = (float)x;
+                    //float yf = (float)y;
+                    //Vector4 mouse = new Vector4(2F * (xf / _width) - 1F, 2F * ((_height - yf) / _height) - 1F, -1F, 1F);
+                    //mouse = _scene.CurrentCamera.ImageToWorld(mouse);
 
-                    Vector4 camara = new Vector4(_scene.CurrentCamera.Position, 1F);
-                    bool intersect = false;
-                    float distance = float.MaxValue;
+                    var mouseWorld = GetMouseWorldPositionOnNearPlane(x,y);
+                    var rayOrigin = _scene.CurrentCamera.Position;
+                    var rayDir = (mouseWorld - rayOrigin);
+                    rayDir.Normalized();
+
+                   //Vector4 camara = new Vector4(_scene.CurrentCamera.Position, 1F);
+                   bool intersect = false;
+                   float distance = float.MaxValue;
 
                     ShapeNode picked = null;
 
                     //Reviso cada objeto de la escena y lanzo un rayo para ver la interseccion
-                    foreach (ShapeNode s in _scene.Shapes)
+                    //foreach (ShapeNode s in _scene.Shapes)
+                    foreach(CelestialBody cb in _celestialBodies)
                     {
-                        Vector3 mouseModel, camaraModel;
-                        mouseModel = s.CamaraToModel3(mouse);
-                        camaraModel = s.CamaraToModel3(camara);
+                        //Vector3 mouseModel, camaraModel;
+                        //mouseModel = s.CamaraToModel3(mouse);
+                        //camaraModel = s.CamaraToModel3(camara);
 
-                        Ray r = new Ray(camaraModel, (mouseModel - camaraModel));
+                        //Ray r = new Ray(camaraModel, (mouseModel - camaraModel));
+
                         float distance_t = 0;
-                        bool intersect_t = Ray.Intersect(r, (IMesh)s.Shape, out distance_t);
+
+                        //bool intersect_t = Ray.Intersect(r, (IMesh)s.Shape, out distance_t);
+
+                        //var cb = CelestialBody.FindCelestialBody(s);
+                        bool intersect_t = SphereLineIntersection(cb.Position, cb.Radius, rayOrigin, rayDir, out distance_t);
+
                         if (intersect_t && distance > distance_t && distance_t > 0)
                         {
                             distance = distance_t;
-                            picked = s;
+                            //picked = s;
+                            picked = cb.Shape;
                             intersect = true;
                         }
                     }
@@ -389,6 +594,33 @@ namespace Starter3D.Plugin.UniverseSimulator
             {
                 _isMouseDownRight = true;
             }
+        }
+
+        private bool SphereLineIntersection(Vector3 sphereCenter, float radius, Vector3 rayOrigin, Vector3 dir, out float t)
+        {
+            t = -1;           
+            
+            //a*x2 + b*x + c = 0
+            //x = (-b +/- sqrt(b2 -4ac))/2a
+
+            var oc = rayOrigin - sphereCenter;
+            float a = dir.LengthSquared;
+            float b = 2 * Vector3.Dot(dir, oc);
+            float c = oc.LengthSquared - radius * radius;
+
+            var delta = b * b - 4 * a * c;
+
+            if (delta < 0) return false; //no hay intersección
+            else if (delta == 0) t = -b / (2 * a);
+            else
+            {
+                delta = (float)Math.Sqrt(delta);
+                var t1 = (-b - delta) / (2 * a);
+                var t2 = (-b + delta) / (2 * a);
+                if (t1 >= 0) t = t1;
+                if (t2 >= 0 && (t1 < 0 || t2 < t1)) t = t2;
+            }
+            return t >= 0;
         }
 
         public void MouseUp(ControllerMouseButton button, int x, int y)
@@ -440,34 +672,45 @@ namespace Starter3D.Plugin.UniverseSimulator
                 else
                 {
                     //Obtengo el punto
-                    float xf = (float)x;
-                    float yf = (float)y;
-                    Vector4 mouse = new Vector4(2F * (xf / _width) - 1F, 2F * ((_height - yf) / _height) - 1F, -1F, 1F);
-                    mouse = _scene.CurrentCamera.ImageToWorld(mouse);
+                    //float xf = (float)x;
+                    //float yf = (float)y;
+                    //Vector4 mouse = new Vector4(2F * (xf / _width) - 1F, 2F * ((_height - yf) / _height) - 1F, -1F, 1F);
+                    //mouse = _scene.CurrentCamera.ImageToWorld(mouse);
 
-                    Vector4 camara = new Vector4(_scene.CurrentCamera.Position, 1F);
+                    var mouseWorld = GetMouseWorldPositionOnNearPlane(x, y);
+                    var rayOrigin = _scene.CurrentCamera.Position;
+                    var rayDir = (mouseWorld - rayOrigin);
+                    rayDir.Normalized();
+
+                    //Vector4 camara = new Vector4(_scene.CurrentCamera.Position, 1F);
                     bool intersect = false;
                     float distance = float.MaxValue;
 
                     //Reviso cada objeto de la escena y lanzo un rayo para ver la interseccion
-                    foreach (ShapeNode s in _scene.Shapes)
+                    //foreach (ShapeNode s in _scene.Shapes)
+                    foreach (CelestialBody cb in _celestialBodies)
                     {
-                        if (s == _selected)
+                        //if (s == _selected)
+                        if(cb.Shape == _selected)
                             continue;
-                        Vector3 mouseModel, camaraModel;
-                        mouseModel = s.CamaraToModel3(mouse);
-                        camaraModel = s.CamaraToModel3(camara);
 
-                        Ray r = new Ray(camaraModel, (mouseModel - camaraModel));
+                        //Vector3 mouseModel, camaraModel;
+                        //mouseModel = s.CamaraToModel3(mouse);
+                        //camaraModel = s.CamaraToModel3(camara);
+
+                        //Ray r = new Ray(camaraModel, (mouseModel - camaraModel));
                         float distance_t = 0;
-                        bool intersect_t = Ray.Intersect(r, (IMesh)s.Shape, out distance_t);
+                        //bool intersect_t = Ray.Intersect(r, (IMesh)s.Shape, out distance_t);
+                        bool intersect_t = SphereLineIntersection(cb.Position, cb.Radius, rayOrigin, rayDir, out distance_t);
+
                         if (intersect_t && distance > distance_t && distance_t > 0)
                         {
                             distance = distance_t;
-                            _hover = s;
+                            _hover = cb.Shape;
                             intersect = true;
                         }
-                    }
+                    }                   
+
                     if (intersect)
                     {
                         _hover.Shape.Material = _hoverMaterial;
@@ -479,6 +722,21 @@ namespace Starter3D.Plugin.UniverseSimulator
                     }
                 }
             }
+            else if (_mode == Mode.Simulate)
+            {
+                if (_isMouseDownRight)
+                {
+                    var cam = _scene.CurrentCamera;
+                    if (deltaX > 0)
+                        rotateCameraRightward(cam);
+                    else if (deltaX < 0)
+                        rotateCameraLeftward(cam);
+                    if (deltaY < 0)
+                        rotateCameraUpward(cam);
+                    else if (deltaY > 0)
+                        rotateCameraDownward(cam);
+                }
+            }
 
         }
         #endregion
@@ -487,18 +745,56 @@ namespace Starter3D.Plugin.UniverseSimulator
         public void KeyDown(int key)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {   
+                switch (key)
+                { 
+                    case 49: //1
+                        SetMode(Mode.Navigate); break;
+                    case (49 + 2 - 1): //2
+                        SetMode(Mode.Insert); break;
+                    case (49 + 3 - 1): //3
+                        SetMode(Mode.Pick); break;
+                    case (49 + 4 - 1): //4
+                        SetMode(Mode.Simulate); break;
+                }
+            }
+            else
             {
-                if (key == '1')
+                var cam = _scene.CurrentCamera;
+                switch (_mode)
                 {
-                    SetMode(Mode.Navigate);
-                }
-                else if (key == '2')
-                {
-                    SetMode(Mode.Insert);
-                }
-                else if (key == '3')
-                {
-                    SetMode(Mode.Pick);
+                    case Mode.Simulate:
+                    case Mode.Navigate:
+                    case Mode.Pick:
+                    case Mode.Insert:
+                        switch (key)
+                        {
+                            case (65 + 'w' - 'a'): //w
+                                moveCameraForward(cam);
+                                break;
+                            case (65): //a
+                                moveCameraLeftward(cam);
+                                break;
+                            case (65 + 's' - 'a'): //s
+                                moveCameraBackward(cam);
+                                break;
+                            case (65 + 'd' - 'a'): //d
+                                moveCameraRightward(cam);
+                                break;
+                            case (65 + 'q' - 'a'): //q
+                                moveCameraDownward(cam);
+                                break;
+                            case (65 + 'e' - 'a'): //e
+                                moveCameraUpward(cam);
+                                break;
+                            case (49 + 2 - 1): //2
+                                rotateCameraCounterClockwise(cam);
+                                break;
+                            case (49 + 3 - 1)://3
+                                rotateCameraClockwise(cam);
+                                break;
+                        }
+                        break;
                 }
             }
         }
@@ -545,6 +841,12 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             _simulationRunning = true;
             _solver.AddBoundingBoxXComponents(_celestialBodies);
+
+            //backupear cámara
+            var cam = _scene.CurrentCamera;
+            _camBackup.Position = cam.Position;
+            _camBackup.Target = cam.Target;
+            _camBackup.Up = cam.Up;
         }
 
         private void LeaveCurrentMode()
@@ -575,6 +877,12 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             _simulationRunning = false;
             _solver.ClearBoundingBoxXList();
+
+            //devolver cámara a su estado original
+            var cam = _scene.CurrentCamera;
+            cam.Position = _camBackup.Position;
+            cam.Target = _camBackup.Target;
+            cam.Up = _camBackup.Up;
         }
 
         private void RefreshMode()
