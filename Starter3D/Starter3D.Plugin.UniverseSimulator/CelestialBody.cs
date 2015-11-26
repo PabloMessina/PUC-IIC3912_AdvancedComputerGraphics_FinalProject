@@ -192,7 +192,8 @@ namespace Starter3D.Plugin.UniverseSimulator
         // (posición se setea por mouse)
         // (copiar shape produce bugs y no es necesario)
         // Actualmente lo uso en el CelestialBodyViewModel
-       public void CopyFrom(CelestialBody other) {
+       public void CopyFrom(CelestialBody other) 
+       {
            if (other == null) return;
            Gravity = other.Gravity;
            IsLightSource = other.IsLightSource;
@@ -203,6 +204,22 @@ namespace Starter3D.Plugin.UniverseSimulator
            Velocity = other.Velocity;
            NextVelocity = _velocity;           
        }
+
+       public void Clone(CelestialBody other)
+       {
+           if (other == null) return;
+           _hasGravity = other._hasGravity;
+           _isLightSource = other._isLightSource;
+           _mass = other._mass;
+           _defaultMaterial = other._defaultMaterial;
+           _name = other._name;
+           _radius = other._radius;
+           _velocity = other._velocity;
+           _position = other._position;
+           _nextPosition = _position;
+           _nextVelocity = _velocity;
+       }
+
 
        private void UpdateLightsPositions()
        {
@@ -293,6 +310,16 @@ namespace Starter3D.Plugin.UniverseSimulator
         public static CelestialBody FindCelestialBody(ShapeNode shape)
         {
             return _shapeToCelestialBodyMap[shape];
+        }
+
+        public static void ClearCelestialBody(ShapeNode shape)
+        {
+            _shapeToCelestialBodyMap.Remove(shape);
+        }
+
+        public static void AddCelestialBodies(CelestialBody celestialBody, ShapeNode shape)
+        {
+            _shapeToCelestialBodyMap.Add(shape, celestialBody);
         }
     #endregion
 

@@ -127,6 +127,6 @@ namespace Starter3D.API.scene
             _currentCameraIndex = (_currentCameraIndex + 1) % _cameras.Count;
         }
 
-       
+    
     }
 }

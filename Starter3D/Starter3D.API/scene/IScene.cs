@@ -30,6 +30,6 @@ namespace Starter3D.API.scene
 
     void Configure(IRenderer renderer);
     void Render(IRenderer renderer);
-    
+            
   }
 }

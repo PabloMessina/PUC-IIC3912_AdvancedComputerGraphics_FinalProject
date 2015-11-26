@@ -32,10 +32,19 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             if (_controller != null)
             {
-                var btn = (Button)sender;
+                var btn = (System.Windows.Controls.Primitives.ToggleButton)sender;
                 _controller.SetMode((Mode)btn.Tag);
             }
-        }       
-      
+        }
+
+        public void Hide()
+        {
+            this.Grid.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+        public void Show()
+        {
+            this.Grid.Visibility = System.Windows.Visibility.Visible;
+        }
     }
 }

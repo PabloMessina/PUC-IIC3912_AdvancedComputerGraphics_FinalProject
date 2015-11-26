@@ -36,5 +36,15 @@ namespace Starter3D.Plugin.UniverseSimulator
             ((CelestialBodyViewModel)DataContext).Reset();
         }
 
+
+        public void Hide()
+        {
+            this.Grid.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+        public void Show()
+        {
+            this.Grid.Visibility = System.Windows.Visibility.Visible;
+        }
     }
 }

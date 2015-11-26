@@ -36,7 +36,8 @@ namespace Starter3D.Plugin.UniverseSimulator
         private readonly IRenderer _renderer;
         private readonly ISceneReader _sceneReader;
         private readonly IResourceManager _resourceManager;
-        private readonly IScene _scene;
+        private IScene _scene;
+        private IScene _sceneBackup;
 
         private readonly UniverseControllerView _centralView;
         private readonly LeftToolView _leftView;
@@ -72,10 +73,12 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         //Listas con los cuerpos celestes
         private List<CelestialBody> _celestialBodies = new List<CelestialBody>();
+        private List<CelestialBody> _celestialBodiesBackup = new List<CelestialBody>();
         private ShapeNode _base;
 
         //Simulación
         private bool _simulationRunning = false;
+        private bool _pauseSimulation = false;
         private HashSet<CelestialBody> _gravitySources = new HashSet<CelestialBody>();
 
         //Skybox
@@ -88,6 +91,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         private float _rotAngle = (float)(Math.PI / 180 * 2f);
         private float _camVelocity = 30f;
         private CameraBackup _camBackup;
+
 
         #endregion
 
@@ -489,7 +493,7 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         public void Update(double deltaTime)
         {
-            if (_simulationRunning)
+            if (_simulationRunning && !_pauseSimulation)
             {
                 _solver.SolveNextState(_celestialBodies, _gravitySources);
                 _solver.SortBoundingBoxXComponents();
@@ -764,11 +768,14 @@ namespace Starter3D.Plugin.UniverseSimulator
                 switch (_mode)
                 {
                     case Mode.Simulate:
-                    case Mode.Navigate:
-                    case Mode.Pick:
-                    case Mode.Insert:
-                        switch (key)
+                        switch (key) 
                         {
+                            case (27):
+                                SetMode(Mode.Navigate);
+                                break;
+                            case (80):
+                                _pauseSimulation = !_pauseSimulation;
+                                break;
                             case (65 + 'w' - 'a'): //w
                                 moveCameraForward(cam);
                                 break;
@@ -793,6 +800,14 @@ namespace Starter3D.Plugin.UniverseSimulator
                             case (49 + 3 - 1)://3
                                 rotateCameraClockwise(cam);
                                 break;
+                        }
+                        break;
+                    case Mode.Navigate:
+                    case Mode.Pick:
+                    case Mode.Insert:
+                        switch (key)
+                        {
+                            
                         }
                         break;
                 }
@@ -842,6 +857,12 @@ namespace Starter3D.Plugin.UniverseSimulator
             _simulationRunning = true;
             _solver.AddBoundingBoxXComponents(_celestialBodies);
 
+            TooltipMessage = "Press ESC to exit. Use right click to rotate the camera view and keys a, s, d, w, q, e, 2, 3 to move the camera around. Press p to pause/continue simulation";
+            _leftView.Hide();
+            _rightView.Hide();
+            BackUpScene();
+
+
             //backupear cámara
             var cam = _scene.CurrentCamera;
             _camBackup.Position = cam.Position;
@@ -878,6 +899,10 @@ namespace Starter3D.Plugin.UniverseSimulator
             _simulationRunning = false;
             _solver.ClearBoundingBoxXList();
 
+            _leftView.Show();
+            _rightView.Show();
+            UnBackUpScene();
+            
             //devolver cámara a su estado original
             var cam = _scene.CurrentCamera;
             cam.Position = _camBackup.Position;
@@ -888,6 +913,55 @@ namespace Starter3D.Plugin.UniverseSimulator
         private void RefreshMode()
         {
             SetMode(_mode);
+        }
+
+        private void BackUpScene()
+        {
+            _celestialBodiesBackup = new List<CelestialBody>();
+            
+            List<CameraNode> cameras = new List<CameraNode>();
+            foreach (CameraNode c in _scene.Cameras)
+            {
+                cameras.Add(c);
+            }
+            List<ShapeNode> shapes = new List<ShapeNode>();
+            foreach (ShapeNode s in _scene.Shapes)
+            {
+                CelestialBody newBody = new CelestialBody();
+                CelestialBody oldBody = CelestialBody.FindCelestialBody(s);
+                ShapeNode clone = s.Clone();
+                newBody.Clone(oldBody);                
+                newBody.Shape = clone;
+                shapes.Add(clone);
+                clone.Configure(_renderer);   
+                _celestialBodiesBackup.Add(newBody);
+                CelestialBody.ClearCelestialBody(s);
+                CelestialBody.AddCelestialBodies(newBody, clone);
+            }
+            List<LightNode> lights = new List<LightNode>();
+            foreach (LightNode l in _scene.Lights)
+            {
+                lights.Add(l);
+            }
+            _sceneBackup = new Scene(cameras, shapes, lights);            
+        }
+
+        private void UnBackUpScene()
+        {
+            _solver = new PhysicsSolver();
+            _solver.CollisionDetected += HandleCollisionDetected;
+
+            _scene = _sceneBackup;
+            _celestialBodies = _celestialBodiesBackup;
+            _gravitySources.Clear();
+
+            foreach (CelestialBody celestialBody in _celestialBodies)
+	        {
+		        if (celestialBody.Gravity)
+                    _gravitySources.Add(celestialBody);
+	        } 
+
+            _scene.Configure(_renderer);
         }
 
         #endregion

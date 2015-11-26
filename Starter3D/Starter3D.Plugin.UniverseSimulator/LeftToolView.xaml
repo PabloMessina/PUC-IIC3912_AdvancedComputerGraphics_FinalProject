@@ -5,13 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Starter3D.Plugin.UniverseSimulator"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="45">
-    <Grid Background="#FFECECEC" Width="45" HorizontalAlignment="Left">
+             d:DesignHeight="300" d:DesignWidth="60">
+    <Grid x:Name="Grid"  Background="#FFECECEC" Width="60" HorizontalAlignment="Left">
         <!---->
-        <Button Tag ="{x:Static local:Mode.Navigate}" Content="Navigate(1)" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click" ToolTip="Navigate(1)" Background="#FFF3F2F2"/>
-        <Button Tag="{x:Static local:Mode.Insert}" Content="Insert(2)" HorizontalAlignment="Left" Margin="5,45,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click" ToolTip="Insert(2)" Background="#FFF3F2F2"/>
-        <Button Tag="{x:Static local:Mode.Pick}" Content="Pick(3)" HorizontalAlignment="Left" Margin="5,85,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click" ToolTip="Pick(3)" Background="#FFF3F2F2"/>            
-        <Button Tag="{x:Static local:Mode.Simulate}" Content="Simulate(4)" HorizontalAlignment="Left" Margin="5,125,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click" ToolTip="Simulate(4)" Background="#FFF3F2F2" />
+        <RadioButton Style="{StaticResource {x:Type ToggleButton}}" Tag="{x:Static local:Mode.Navigate}" Content="Navigate(1)" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Width="50" Height="35" Click="Button_Click" ToolTip="Navigate(1)" Background="#FFF3F2F2"/>
+        <RadioButton Style="{StaticResource {x:Type ToggleButton}}" Tag="{x:Static local:Mode.Insert}" Content="Insert(2)" HorizontalAlignment="Left" Margin="5,45,0,0" VerticalAlignment="Top" Width="50" Height="35" Click="Button_Click" ToolTip="Insert(2)" Background="#FFF3F2F2"/>
+        <RadioButton Style="{StaticResource {x:Type ToggleButton}}" Tag="{x:Static local:Mode.Pick}" Content="Pick(3)" HorizontalAlignment="Left" Margin="5,85,0,0" VerticalAlignment="Top" Width="50" Height="35" Click="Button_Click" ToolTip="Pick(3)" Background="#FFF3F2F2"/>            
+        <RadioButton Style="{StaticResource {x:Type ToggleButton}}" Tag="{x:Static local:Mode.Simulate}" Content="Simulate(4)" HorizontalAlignment="Left" Margin="5,225,0,0" VerticalAlignment="Top" Width="50" Height="35" Click="Button_Click" ToolTip="Simulate(4)" Background="#FFF3F2F2" />
         <!---->
         <!--
         <Button Content="N" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" Width="35" Height="35" Click="Button_Click" ToolTip="Navigate(1)" Background="#FFF3F2F2"/>
