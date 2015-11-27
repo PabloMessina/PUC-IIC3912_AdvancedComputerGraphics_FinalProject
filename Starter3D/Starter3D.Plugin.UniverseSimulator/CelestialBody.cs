@@ -154,7 +154,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             _radius = 20;
             _mass = 100;
             _position = position;
-            _velocity = new Vector3(1, 0, 0);
+            _velocity = new Vector3(10, 0, 0);
             _hasGravity = false;
             _isLightSource = false;
             _isLightInScene = false; 

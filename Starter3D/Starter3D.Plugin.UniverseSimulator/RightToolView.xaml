@@ -21,10 +21,10 @@
         <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="20" Margin="152,14,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Name}" IsEnabled="{Binding HasCelestialBody}"/>
         <TextBox x:Name="Radius" HorizontalAlignment="Left" Height="20" Margin="152,44,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Radius, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
         <TextBox x:Name="Mass" HorizontalAlignment="Left" Height="20" Margin="152,74,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Mass, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
-        <TextBox x:Name="VelocityVectorX" HorizontalAlignment="Left" Height="20" Margin="152,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityX, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
-        <TextBox x:Name="VelocityVectorY" HorizontalAlignment="Left" Height="20" Margin="195,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityY, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
-        <TextBox x:Name="VelocityVectorZ" HorizontalAlignment="Left" Height="20" Margin="239,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityZ, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
-        <TextBox x:Name="VelocityMagnitude" HorizontalAlignment="Left" Height="20" Margin="152,134,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding VelocityMagnitude, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <TextBox x:Name="VelocityVectorX" HorizontalAlignment="Left" Height="20" Margin="152,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityX, StringFormat=N2}" IsEnabled="False"/>
+        <TextBox x:Name="VelocityVectorY" HorizontalAlignment="Left" Height="20" Margin="195,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityY, StringFormat=N2}" IsEnabled="False"/>
+        <TextBox x:Name="VelocityVectorZ" HorizontalAlignment="Left" Height="20" Margin="239,104,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityZ, StringFormat=N2}" IsEnabled="False"/>
+        <TextBox x:Name="VelocityMagnitude" HorizontalAlignment="Left" Height="20" Margin="152,134,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding VelocityMagnitude, StringFormat=N2}" IsEnabled="False"/>
         <CheckBox x:Name="HasGravity" Content="" HorizontalAlignment="Left" Margin="88,168,0,0" VerticalAlignment="Top" IsChecked="{Binding HasGravity}" IsEnabled="{Binding HasCelestialBody}"/>
         <CheckBox x:Name="HasLight" Content="" HorizontalAlignment="Left" Margin="213,168,0,0" VerticalAlignment="Top" IsChecked="{Binding HasLight}" IsEnabled="{Binding HasCelestialBody}"/>
         

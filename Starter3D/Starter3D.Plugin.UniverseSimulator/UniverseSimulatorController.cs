@@ -18,7 +18,7 @@ using Starter3D.API.math;
 
 namespace Starter3D.Plugin.UniverseSimulator
 {
-    public enum Mode { Navigate, Insert, Pick, Simulate };
+    public enum Mode { Insert, Pick, Simulate };
 
     struct CameraBackup
     {
@@ -64,9 +64,9 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         //Materiales temporales para volver al material original de los objetos que se les hacen picking
         private IMaterial _materialDefault;
-
         private ShapeNode _hover;
         private ShapeNode _selected;
+        private ShapeNode _selectedToChangeVelocity;
 
         //ViewModel para el cuerpo celeste actualmente seleccionado
         private CelestialBodyViewModel _selectedViewModel;
@@ -75,6 +75,8 @@ namespace Starter3D.Plugin.UniverseSimulator
         private List<CelestialBody> _celestialBodies = new List<CelestialBody>();
         private List<CelestialBody> _celestialBodiesBackup = new List<CelestialBody>();
         private ShapeNode _base;
+        private CelestialBody _velocitySphere;
+        
 
         //Simulación
         private bool _simulationRunning = false;
@@ -426,7 +428,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             //seteamos datacontext de la vista de abajo
             _bottomView.DataContext = this;
 
-            SetMode(Mode.Navigate);
+            SetMode(Mode.Insert);
         }
 
         private void HandleCollisionDetected(CelestialBody cb1, CelestialBody cb2)
@@ -449,8 +451,11 @@ namespace Starter3D.Plugin.UniverseSimulator
             //Para crear nuevos cuerpos celestes lo que hago es tomar el base y crear un clon de este
             //El metodo clon lo hice dentro de ShapeNode
             _base = _scene.Shapes.ElementAt(0);
+            _velocitySphere = new CelestialBody(new Vector3(0,0,0), _scene.Shapes.ElementAt(1), _scene);                       
+            
             CelestialBody baseCelestialBody = new CelestialBody(new Vector3(0, 0, 0), _base, _scene);
             _celestialBodies.Add(baseCelestialBody);
+            _celestialBodies.Add(_velocitySphere);
 
             _resourceManager.Configure(_renderer);
             _scene.Configure(_renderer);
@@ -480,6 +485,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             //render scene
             _scene.Render(_renderer);
+            _velocitySphere.Shape.Render(_renderer);
 
             //render skybox
             if (_cameraDirty)
@@ -502,6 +508,7 @@ namespace Starter3D.Plugin.UniverseSimulator
                 RefreshBodiesForNextStep();
             }
         }
+        
         private void RefreshBodiesForNextStep()
         {
             foreach (var cb in _celestialBodies) cb.UpdateVariablesForNextStep();
@@ -516,8 +523,7 @@ namespace Starter3D.Plugin.UniverseSimulator
                 _isMouseDownLeft = true;
                 if (_mode == Mode.Insert)
                 {
-                    Vector3 mousePoint = GetMouseWorldPosition(x, y);
-                    
+                    Vector3 mousePoint = GetMouseWorldPosition(x, y);                    
                     //Clonar y agregar a la escena
                     ShapeNode celestialBodyNode = _base.Clone();
                     celestialBodyNode.Shape.Material = _materialDefault;
@@ -531,43 +537,25 @@ namespace Starter3D.Plugin.UniverseSimulator
                 else if (_mode == Mode.Pick)
                 {
                     //Obtengo el punto
-                    //float xf = (float)x;
-                    //float yf = (float)y;
-                    //Vector4 mouse = new Vector4(2F * (xf / _width) - 1F, 2F * ((_height - yf) / _height) - 1F, -1F, 1F);
-                    //mouse = _scene.CurrentCamera.ImageToWorld(mouse);
-
                     var mouseWorld = GetMouseWorldPositionOnNearPlane(x,y);
                     var rayOrigin = _scene.CurrentCamera.Position;
                     var rayDir = (mouseWorld - rayOrigin);
                     rayDir.Normalized();
-
-                   //Vector4 camara = new Vector4(_scene.CurrentCamera.Position, 1F);
-                   bool intersect = false;
-                   float distance = float.MaxValue;
+                                       
+                    bool intersect = false;
+                    float distance = float.MaxValue;
 
                     ShapeNode picked = null;
 
-                    //Reviso cada objeto de la escena y lanzo un rayo para ver la interseccion
-                    //foreach (ShapeNode s in _scene.Shapes)
+                    //Reviso cada objeto de la escena y lanzo un rayo para ver la interseccion                    
                     foreach(CelestialBody cb in _celestialBodies)
                     {
-                        //Vector3 mouseModel, camaraModel;
-                        //mouseModel = s.CamaraToModel3(mouse);
-                        //camaraModel = s.CamaraToModel3(camara);
-
-                        //Ray r = new Ray(camaraModel, (mouseModel - camaraModel));
-
                         float distance_t = 0;
-
-                        //bool intersect_t = Ray.Intersect(r, (IMesh)s.Shape, out distance_t);
-
-                        //var cb = CelestialBody.FindCelestialBody(s);
                         bool intersect_t = SphereLineIntersection(cb.Position, cb.Radius, rayOrigin, rayDir, out distance_t);
 
                         if (intersect_t && distance > distance_t && distance_t > 0)
                         {
-                            distance = distance_t;
-                            //picked = s;
+                            distance = distance_t;                            
                             picked = cb.Shape;
                             intersect = true;
                         }
@@ -580,15 +568,27 @@ namespace Starter3D.Plugin.UniverseSimulator
 
                     if (intersect)
                     {
+                        //Si se selecciona la esfera de cambio de velocidad se guarda la esfera seleccionada anteriormente
+                        if (picked == _velocitySphere.Shape)
+                            _selectedToChangeVelocity = _selected;                            
+                        
+                        
                         _selected = picked;
                         _selected.Shape.Material = _selectedMaterial;
                         _selectedViewModel.CelestialBody = CelestialBody.FindCelestialBody(_selected);
                         _hover = null;
+                        
+                        //Si es que el objeto seleccionado no es la esfera de cambio de velocidad, entonces esta se mueve segun la velocidad del cuerpo seleccionado
+                        if (picked != _velocitySphere.Shape)
+                            SetVelocityPoint();
+                        
+                        
                     }
                     else
                     {
                         _selected = null;
                         _selectedViewModel.CelestialBody = null;
+                        UnSetVelocityPoint();
                     }
 
                 }
@@ -634,29 +634,26 @@ namespace Starter3D.Plugin.UniverseSimulator
 
             if (_isMouseDownLeft)
                 _isMouseDownLeft = false;
+
+            if (_selectedToChangeVelocity != null)
+            {
+                SetNewVelocity();
+            }
         }
 
         public void MouseWheel(int delta, int x, int y)
         {
-            _scene.CurrentCamera.Zoom(delta);
+            var cam = _scene.CurrentCamera;
+            if (delta > 0)
+                moveCameraForward(cam);
+            else
+                moveCameraBackward(cam);
             _cameraDirty = true;
         }
 
         public void MouseMove(int x, int y, int deltaX, int deltaY)
         {
-            if (_mode == Mode.Navigate)
-            {
-                if (_isMouseDownLeft)
-                {
-                    _scene.CurrentCamera.Drag(deltaX, deltaY);
-                    _cameraDirty = true;
-                }
-                else if (_isMouseDownRight)
-                {
-                    //_scene.CurrentCamera.Orbit(deltaX, deltaY);        
-                }
-            }
-            else if (_mode == Mode.Pick)
+            if (_mode == Mode.Pick)
             {
                 //Arrastar un planeta
                 if (_isMouseDownLeft)
@@ -669,50 +666,36 @@ namespace Starter3D.Plugin.UniverseSimulator
                         cb.Position = mousePoint;
                         cb.NextPosition = mousePoint;
                         cb.Shape.Position = mousePoint;
+                        if (_selected != _velocitySphere.Shape)                        
+                        {
+                            SetVelocityPoint();
+                        }
                     }
 
                 }
-                //Seleccionar un planeta con hover
+                else if (_isMouseDownRight)
+                {
+                    _scene.CurrentCamera.Drag(deltaX, deltaY);
+                    _cameraDirty = true;
+                }
+                
                 else
                 {
-                    //Obtengo el punto
-                    //float xf = (float)x;
-                    //float yf = (float)y;
-                    //Vector4 mouse = new Vector4(2F * (xf / _width) - 1F, 2F * ((_height - yf) / _height) - 1F, -1F, 1F);
-                    //mouse = _scene.CurrentCamera.ImageToWorld(mouse);
-
+                    
+                    //Seleccionar un planeta con hover////////////////////
                     var mouseWorld = GetMouseWorldPositionOnNearPlane(x, y);
                     var rayOrigin = _scene.CurrentCamera.Position;
                     var rayDir = (mouseWorld - rayOrigin);
                     rayDir.Normalized();
 
-                    //Vector4 camara = new Vector4(_scene.CurrentCamera.Position, 1F);
                     bool intersect = false;
                     float distance = float.MaxValue;
-
+                    
                     //Reviso cada objeto de la escena y lanzo un rayo para ver la interseccion
-                    //foreach (ShapeNode s in _scene.Shapes)
                     foreach (CelestialBody cb in _celestialBodies)
                     {
-                        //if (s == _selected)
-                        if(cb.Shape == _selected)
-                            continue;
-
-                        //Vector3 mouseModel, camaraModel;
-                        //mouseModel = s.CamaraToModel3(mouse);
-                        //camaraModel = s.CamaraToModel3(camara);
-
-                        //Ray r = new Ray(camaraModel, (mouseModel - camaraModel));
-                        float distance_t = 0;
-                        //bool intersect_t = Ray.Intersect(r, (IMesh)s.Shape, out distance_t);
-                        bool intersect_t = SphereLineIntersection(cb.Position, cb.Radius, rayOrigin, rayDir, out distance_t);
-
-                        if (intersect_t && distance > distance_t && distance_t > 0)
-                        {
-                            distance = distance_t;
-                            _hover = cb.Shape;
+                        if (Intersect(ref rayOrigin, ref rayDir, ref distance, cb))
                             intersect = true;
-                        }
                     }                   
 
                     if (intersect)
@@ -724,6 +707,14 @@ namespace Starter3D.Plugin.UniverseSimulator
                         _hover.Shape.Material = CelestialBody.FindCelestialBody(_hover).Material;
                         _hover = null;
                     }
+                }
+            }
+            else if (_mode == Mode.Insert)
+            {                                
+                if (_isMouseDownRight)
+                {
+                    _scene.CurrentCamera.Drag(deltaX, deltaY);
+                    _cameraDirty = true;
                 }
             }
             else if (_mode == Mode.Simulate)
@@ -743,6 +734,24 @@ namespace Starter3D.Plugin.UniverseSimulator
             }
 
         }
+
+        private bool Intersect(ref Vector3 rayOrigin, ref Vector3 rayDir, ref float distance, CelestialBody cb)
+        {
+            if (cb.Shape == _selected)
+                return false;
+
+            float distance_t = 0;
+            bool intersect_t = SphereLineIntersection(cb.Position, cb.Radius, rayOrigin, rayDir, out distance_t);
+
+            if (intersect_t && distance > distance_t && distance_t > 0)
+            {
+                distance = distance_t;
+                _hover = cb.Shape;
+                return true;
+            }
+            return false;
+        }
+
         #endregion
 
         #region Manejo de Teclado
@@ -751,66 +760,67 @@ namespace Starter3D.Plugin.UniverseSimulator
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {   
                 switch (key)
-                { 
-                    case 49: //1
-                        SetMode(Mode.Navigate); break;
-                    case (49 + 2 - 1): //2
+                {                     
+                    case (49): //2
                         SetMode(Mode.Insert); break;
-                    case (49 + 3 - 1): //3
-                        SetMode(Mode.Pick); break;
-                    case (49 + 4 - 1): //4
-                        SetMode(Mode.Simulate); break;
+                    case (49 + 2 - 1): //3
+                        SetMode(Mode.Pick); break;                    
                 }
             }
             else
             {
-                var cam = _scene.CurrentCamera;
+                
                 switch (_mode)
-                {
-                    case Mode.Simulate:
-                        switch (key) 
+                { 
+                    case(Mode.Simulate):
+                        switch (key)
                         {
-                            case (27):
-                                SetMode(Mode.Navigate);
-                                break;
                             case (80):
                                 _pauseSimulation = !_pauseSimulation;
                                 break;
-                            case (65 + 'w' - 'a'): //w
-                                moveCameraForward(cam);
+                            case (27):
+                                SetMode(Mode.Insert);
                                 break;
-                            case (65): //a
-                                moveCameraLeftward(cam);
-                                break;
-                            case (65 + 's' - 'a'): //s
-                                moveCameraBackward(cam);
-                                break;
-                            case (65 + 'd' - 'a'): //d
-                                moveCameraRightward(cam);
-                                break;
-                            case (65 + 'q' - 'a'): //q
-                                moveCameraDownward(cam);
-                                break;
-                            case (65 + 'e' - 'a'): //e
-                                moveCameraUpward(cam);
-                                break;
-                            case (49 + 2 - 1): //2
-                                rotateCameraCounterClockwise(cam);
-                                break;
-                            case (49 + 3 - 1)://3
-                                rotateCameraClockwise(cam);
-                                break;
-                        }
-                        break;
-                    case Mode.Navigate:
-                    case Mode.Pick:
-                    case Mode.Insert:
-                        switch (key)
-                        {
-                            
                         }
                         break;
                 }
+                //Controles de la camara para todos los modos
+                var cam = _scene.CurrentCamera;
+                switch (key) 
+                {
+                    case (34): //av pag
+                        moveCameraForward(cam);            
+                        break;
+                    case (33): //av pag
+                        moveCameraBackward(cam);  
+                        break;
+                    case (38): //a
+                    case (65 + 'w' - 'a'): //w
+                        moveCameraUpward(cam);                        
+                        break;
+                    case (65): //a
+                    case (37): //a
+                        moveCameraLeftward(cam);
+                        break;
+                    case (40): //a
+                    case (65 + 's' - 'a'): //s
+                        moveCameraDownward(cam);
+                        break;
+                    case (39):
+                    case (65 + 'd' - 'a'): //d
+                        moveCameraRightward(cam);
+                        break;
+                    case (65 + 'q' - 'a'): //q
+                        break;
+                    case (65 + 'e' - 'a'): //e
+                        break;
+                    case (49 + 2 - 1): //2
+                        rotateCameraCounterClockwise(cam);
+                        break;
+                    case (49 + 3 - 1)://3
+                        rotateCameraClockwise(cam);
+                        break;
+                }                
             }
         }
         #endregion
@@ -833,8 +843,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             _mode = mode;
             switch (_mode)
             {
-                case Mode.Insert: EnterInsertMode(); break;
-                case Mode.Navigate: EnterNavigateMode(); break;
+                case Mode.Insert: EnterInsertMode(); break;                
                 case Mode.Pick: EnterPickMode(); break;
                 case Mode.Simulate: EnterSimulateMode(); break;
             }
@@ -844,23 +853,21 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             TooltipMessage = "Left click insert a new planet";
         }
-        private void EnterNavigateMode()
-        {
-            TooltipMessage = "Left click to drag around";
-        }
         private void EnterPickMode()
         {
             TooltipMessage = "Left click to select a planet. Hold down to move it around";
         }
         private void EnterSimulateMode()
         {
+            BackUpScene();
+
             _simulationRunning = true;
             _solver.AddBoundingBoxXComponents(_celestialBodies);
 
             TooltipMessage = "Press ESC to exit. Use right click to rotate the camera view and keys a, s, d, w, q, e, 2, 3 to move the camera around. Press p to pause/continue simulation";
             _leftView.Hide();
             _rightView.Hide();
-            BackUpScene();
+            
 
 
             //backupear cámara
@@ -874,19 +881,19 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             switch (_mode)
             {
-                case Mode.Insert: LeaveInsertMode(); break;
-                case Mode.Navigate: LeaveNavigateMode(); break;
+                case Mode.Insert: LeaveInsertMode(); break;                
                 case Mode.Pick: LeavePickMode(); break;
                 case Mode.Simulate: LeaveSimulateMode(); break;
             }
         }
         private void LeaveInsertMode() { }
-        private void LeaveNavigateMode() { }
         private void LeavePickMode()
         {
             //si hay uno seleccionado, le seteamos el material default
             if (_selected != null)
                 _selected.Shape.Material = CelestialBody.FindCelestialBody(_selected).Material;
+
+            UnSetVelocityPoint();
 
             //seteamos el celestial body a null en el viewmodel para que
             //los inputs de la vista de edición se bloqueen automáticamente
@@ -918,7 +925,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         private void BackUpScene()
         {
             _celestialBodiesBackup = new List<CelestialBody>();
-            
+            CelestialBody oldVelocitySphere = null;
             List<CameraNode> cameras = new List<CameraNode>();
             foreach (CameraNode c in _scene.Cameras)
             {
@@ -937,20 +944,28 @@ namespace Starter3D.Plugin.UniverseSimulator
                 _celestialBodiesBackup.Add(newBody);
                 CelestialBody.ClearCelestialBody(s);
                 CelestialBody.AddCelestialBodies(newBody, clone);
+                if (s == _velocitySphere.Shape)
+                {
+                    oldVelocitySphere = _velocitySphere;
+                    _velocitySphere = newBody;
+                }
             }
             List<LightNode> lights = new List<LightNode>();
             foreach (LightNode l in _scene.Lights)
             {
                 lights.Add(l);
             }
+
+            //Limpiar la esfera de velocidad al comenzar la simulacion
+            _scene.RemoveShape(oldVelocitySphere.Shape);
+            CelestialBody.ClearCelestialBody(oldVelocitySphere.Shape);
+            _celestialBodies.Remove(oldVelocitySphere);
+
             _sceneBackup = new Scene(cameras, shapes, lights);            
         }
 
         private void UnBackUpScene()
-        {
-            _solver = new PhysicsSolver();
-            _solver.CollisionDetected += HandleCollisionDetected;
-
+        {            
             _scene = _sceneBackup;
             _celestialBodies = _celestialBodiesBackup;
             _gravitySources.Clear();
@@ -959,9 +974,34 @@ namespace Starter3D.Plugin.UniverseSimulator
 	        {
 		        if (celestialBody.Gravity)
                     _gravitySources.Add(celestialBody);
-	        } 
-
+	        }            
             _scene.Configure(_renderer);
+        }
+
+        private void SetVelocityPoint()
+        { 
+            _velocitySphere.Shape.Scale = new Vector3(5f, 5f,5f);
+            _velocitySphere.Position = _selected.Position + CelestialBody.FindCelestialBody(_selected).Velocity.Normalized() * CelestialBody.FindCelestialBody(_selected).Radius + CelestialBody.FindCelestialBody(_selected).Velocity;
+            _velocitySphere.Radius = 5F;
+            _velocitySphere.Shape.Position = _velocitySphere.Position;
+        }
+
+        private void UnSetVelocityPoint()
+        {
+            _velocitySphere.Shape.Scale = new Vector3(0f, 0f, 0f);
+            _velocitySphere.Radius = 0F;
+            _velocitySphere.Shape.Position = new Vector3(0, 0, -10000);
+        }
+
+        private void SetNewVelocity()
+        {
+            CelestialBody celestialBodyToChangeVelocity = CelestialBody.FindCelestialBody(_selectedToChangeVelocity);
+            celestialBodyToChangeVelocity.Velocity = _velocitySphere.Position - (celestialBodyToChangeVelocity.Position + CelestialBody.FindCelestialBody(_selected).Velocity.Normalized() * _velocitySphere.Radius);
+            celestialBodyToChangeVelocity.NextVelocity = celestialBodyToChangeVelocity.Velocity;
+            _selected = _selectedToChangeVelocity;
+            _selected.Shape.Material = _selectedMaterial;
+            _selectedViewModel.CelestialBody = CelestialBody.FindCelestialBody(_selected);
+            _selectedToChangeVelocity = null;
         }
 
         #endregion
