@@ -36,5 +36,25 @@ namespace Starter3D.Plugin.UniverseSimulator
             ((CelestialBodyViewModel)DataContext).Reset();
         }
 
+        private void RotateUp_Click(object sender, MouseButtonEventArgs e)
+        {
+            ((CelestialBodyViewModel)DataContext).RotateUp();
+        }
+
+        private void RotateDown_Click(object sender, MouseButtonEventArgs e)
+        {
+            ((CelestialBodyViewModel)DataContext).RotateDown();
+        }
+
+        private void RotateRight_Click(object sender, MouseButtonEventArgs e)
+        {
+            ((CelestialBodyViewModel)DataContext).RotateRight();
+        }
+
+        private void RotateLeft_Click(object sender, MouseButtonEventArgs e)
+        {
+            ((CelestialBodyViewModel)DataContext).RotateLeft();
+        }
+
     }
 }

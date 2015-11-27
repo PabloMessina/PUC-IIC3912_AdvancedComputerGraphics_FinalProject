@@ -75,7 +75,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         private ShapeNode _base;
 
         //Simulación
-        private bool _simulationRunning = false;
+        private static bool _simulationRunning = false;
         private HashSet<CelestialBody> _gravitySources = new HashSet<CelestialBody>();
 
         //Skybox
@@ -90,6 +90,8 @@ namespace Starter3D.Plugin.UniverseSimulator
         private CameraBackup _camBackup;
 
         #endregion
+
+        public static bool SimulationRunning { get { return _simulationRunning; } }
 
         ///////////////////////////////Metodos publicos que se usan desde las distintas views (left, right, bottom)///////////////////////////////////////
         //Metodos para actualizar los estados de la barra izquierda
@@ -441,13 +443,6 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             InitRenderer();
 
-            //Cuerpo celeste base
-            //Para crear nuevos cuerpos celestes lo que hago es tomar el base y crear un clon de este
-            //El metodo clon lo hice dentro de ShapeNode
-            _base = _scene.Shapes.ElementAt(0);
-            CelestialBody baseCelestialBody = new CelestialBody(new Vector3(0, 0, 0), _base, _scene);
-            _celestialBodies.Add(baseCelestialBody);
-
             _resourceManager.Configure(_renderer);
             _scene.Configure(_renderer);
 
@@ -455,6 +450,18 @@ namespace Starter3D.Plugin.UniverseSimulator
             _materialDefault = _resourceManager.GetMaterials().ElementAt(0);
             _selectedMaterial = _resourceManager.GetMaterials().ElementAt(1);
             _hoverMaterial = _resourceManager.GetMaterials().ElementAt(2);
+
+            //Cuerpo celeste base
+            //Para crear nuevos cuerpos celestes lo que hago es tomar el base y crear un clon de este
+            //El metodo clon lo hice dentro de ShapeNode
+            _base = _scene.Shapes.ElementAt(0);
+            CelestialBody baseCelestialBody =
+                new CelestialBody(
+                    new Vector3(0, 0, 0),
+                    _base, _scene,
+                    _resourceManager.GetMaterial("yellow"),
+                    _renderer);
+            _celestialBodies.Add(baseCelestialBody);
 
             //inicializamos el skybox
             var size = _skyboxSize;
@@ -477,6 +484,10 @@ namespace Starter3D.Plugin.UniverseSimulator
             //render scene
             _scene.Render(_renderer);
 
+            //render axes
+            if (_mode != Mode.Simulate)
+                foreach (var cb in _celestialBodies) cb.AxisLine.Render(_renderer, Matrix4.Identity);
+
             //render skybox
             if (_cameraDirty)
             {
@@ -485,17 +496,24 @@ namespace Starter3D.Plugin.UniverseSimulator
                 _cameraDirty = false;
             }
             _skybox.Render(_renderer, _skyboxTransform);
+
         }
 
         public void Update(double deltaTime)
         {
             if (_simulationRunning)
             {
+                //ejecutamos métodos de simulación
                 _solver.SolveNextState(_celestialBodies, _gravitySources);
                 _solver.SortBoundingBoxXComponents();
                 _solver.SweepBoundingBoxesForCollisions();
                 _solver.RemoveDestroyedBoundingBoxes();
                 RefreshBodiesForNextStep();
+            }
+            else
+            {
+                //actualizamos rotaciones en modo edición
+                foreach (var cb in _celestialBodies) cb.UpdateRotation();
             }
         }
         private void RefreshBodiesForNextStep()
@@ -521,7 +539,9 @@ namespace Starter3D.Plugin.UniverseSimulator
                     _scene.AddShape(celestialBodyNode);
 
                     //Agregar cuerpo celeste a la lista de cuerpos celestes
-                    CelestialBody celestialBody = new CelestialBody(mousePoint, celestialBodyNode, _scene);
+                    CelestialBody celestialBody = 
+                        new CelestialBody(mousePoint, celestialBodyNode,
+                            _scene, _resourceManager.GetMaterial("yellow"), _renderer);
                     _celestialBodies.Add(celestialBody);
                 }
                 else if (_mode == Mode.Pick)
@@ -883,6 +903,9 @@ namespace Starter3D.Plugin.UniverseSimulator
             cam.Position = _camBackup.Position;
             cam.Target = _camBackup.Target;
             cam.Up = _camBackup.Up;
+
+            //actualizar ejes
+            foreach (var cb in _celestialBodies) cb.UpdateAxisLine();
         }
 
         private void RefreshMode()

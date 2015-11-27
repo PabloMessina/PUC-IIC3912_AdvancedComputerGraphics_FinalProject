@@ -11,7 +11,7 @@ namespace Starter3D.API.geometry
   /// </summary>
   public interface IVertex
   {
-    Vector3 Position { get; }     
+      Vector3 Position { get; set; }     
     Vector3 Normal { get; set; }
     Vector3 TextureCoords { get; }
 

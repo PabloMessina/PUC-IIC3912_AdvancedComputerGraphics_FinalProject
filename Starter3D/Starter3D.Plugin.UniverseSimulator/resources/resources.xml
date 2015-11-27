@@ -4,6 +4,7 @@
     <BaseShader key="blinnPhong" vertex="genericVertex" fragment="blinnPhongFragment" numbers="shininess" vectors="diffuseColor,specularColor"/>
     <BaseShader key="blinnPhongDiffuseTexture" vertex="genericVertex" fragment="blinnPhongDiffuseTextureFragment" numbers="shininess" vectors="specularColor" textures="diffuseTexture"/>
     <BaseShader key="skyboxShader" vertex="skyboxVertex" fragment="skyboxFragment" vectors="cameraPosition"  textures="topTex,rightTex,leftTex,frontTex,bottomTex,backTex"/>
+    <BaseShader key="plainColorShader" vertex="genericVertex" fragment="plainColorFragment" vectors="color"  />
   </Shaders>
   <Textures>
     <BaseTexture key="stonesDiffTex" path="images/stones.jpg"/>
@@ -37,6 +38,7 @@
     <BaseMaterial key='yellowSpecular' shader='blinnPhong' diffuseColor='1,1,0' specularColor='1,1,1' shininess='100'/>
     <!--<BaseMaterial key='redDiffuse' shader='blinnPhong' diffuseColor='1,0,0' specularColor='0,0,0' shininess='0'/>-->
     <BaseMaterial key='skyboxMaterial' shader='skyboxShader' cameraPosition='0,0,0' topTex='TopTex' rightTex='RightTex' leftTex='LeftTex' bottomTex='BottomTex' frontTex='FrontTex' backTex='BackTex'/>
+    <BaseMaterial key='yellow' shader='plainColorShader' color='1,1,0'/>
 
 
     <BaseMaterial key='separator' shader='blinnPhongDiffuseTexture' diffuseTexture='stonesDiffTex' specularColor='1,1,1' shininess='100'/>

@@ -1,5 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
+using Starter3D.API.geometry;
+using Starter3D.API.renderer;
 using Starter3D.API.resources;
 using Starter3D.API.scene;
 using Starter3D.API.scene.nodes;
@@ -8,20 +10,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Starter3D.Plugin.UniverseSimulator
 {
     public class CelestialBody
     {
         #region private fields
+
+        private static readonly float _2PI = (float)(2 * Math.PI);
+        private static readonly Quaternion TextureCorrection = GetTextureCorrection();
+        private static Vector3 DummyVector3 = Vector3.Zero;
+        private static int _axisCounter = 0;
+
+        //Diccionario estático para registrar y encontrar eficientemente celestial bodies
+        private static Dictionary<ShapeNode, CelestialBody> _shapeToCelestialBodyMap = new Dictionary<ShapeNode, CelestialBody>();
+
         //Atributos del cuerpo celeste
         private Vector3 _position;
         private Vector3 _velocity;
+        private Vector3 _rotAxis;
+        private Quaternion _axisAlignmentRot;
+        private Quaternion _aroundAxisRot;
+        private float _angularVel;
+        private float _angularRot;
         private float _mass;
         private float _radius;                
         private bool _hasGravity;
         private bool _isLightSource;
-        private bool _isLightInScene;
+        private bool _isLightInScene;        
         private string _name;
 
         //Atributos extras por motivos de simulación
@@ -44,12 +62,17 @@ namespace Starter3D.Plugin.UniverseSimulator
         private PointLight _lightFront;
         private PointLight _lightBack;
         //private PointLight _lightCenter;
+
+        //Línea para representar el eje en modo edición
+        private ICurve _axisLine;
+        private IVertex _axisBottom;
+        private IVertex _axisTop;        
         
         //Referencia al scene
         private IScene _scene;
 
-        //Diccionario estático para registrar y encontrar eficientemente celestial bodies
-        private static Dictionary<ShapeNode, CelestialBody> _shapeToCelestialBodyMap = new Dictionary<ShapeNode, CelestialBody>();
+        //Referencia al renderer
+        private IRenderer _renderer;
         #endregion
 
         #region getters y setters
@@ -66,7 +89,10 @@ namespace Starter3D.Plugin.UniverseSimulator
             set
             {
                 _position = value;
-                if(_isLightInScene) UpdateLightsPositions();
+                if(_isLightInScene) 
+                    UpdateLightsPositions();
+                if (!UniverseSimulatorController.SimulationRunning)
+                    UpdateAxisLine();
             }
         }
 
@@ -88,6 +114,34 @@ namespace Starter3D.Plugin.UniverseSimulator
             set { _nextVelocity = value; }
         }
 
+        public Vector3 RotationAxis
+        {
+            get { return _rotAxis; }
+            private set { _rotAxis = value; }
+        }
+
+        public Quaternion AxisAlignmentRotation
+        {
+            get { return _axisAlignmentRot; }
+            set
+            {
+                _axisAlignmentRot = value;
+                if (_shape != null)
+                {
+                    _rotAxis = Vector3.Transform(Vector3.UnitY, _axisAlignmentRot);
+                    _aroundAxisRot = Quaternion.FromAxisAngle(_rotAxis, _angularRot);
+                    _shape.Rotation = _aroundAxisRot * _axisAlignmentRot;
+                    UpdateAxisLine();
+                }
+            }
+        }
+
+        public float AngularVelocity
+        {
+            get { return _angularVel; }
+            set { _angularVel = value; }
+        }
+
         public float Mass
         {
             get { return _mass; }
@@ -102,6 +156,8 @@ namespace Starter3D.Plugin.UniverseSimulator
                 _radius = value;
                 if(_shape != null) 
                     _shape.Scale = new Vector3(_radius);
+                if (_axisBottom != null && !UniverseSimulatorController.SimulationRunning)
+                    UpdateAxisLine();
             }
         }
 
@@ -142,19 +198,29 @@ namespace Starter3D.Plugin.UniverseSimulator
             get { return _shape; }
             set { _shape = value; }
         }
+
+        public ICurve AxisLine
+        {
+            get { return _axisLine; }
+        }
+
         #endregion
 
-        public CelestialBody(Vector3 position, ShapeNode shape, IScene scene)
+        public CelestialBody(Vector3 position, ShapeNode shape, IScene scene, IMaterial axisMaterial, IRenderer renderer)
         {
             _shape = shape;
             _defaultMaterial = shape.Shape.Material;
 
             _scene = scene;
+            _renderer = renderer;
 
             _radius = 20;
             _mass = 100;
             _position = position;
-            _velocity = new Vector3(1, 0, 0);
+            _velocity = Vector3.UnitX;
+            _rotAxis = Vector3.UnitZ;
+            _angularRot = 0;
+            _angularVel = 0;
             _hasGravity = false;
             _isLightSource = false;
             _isLightInScene = false; 
@@ -167,15 +233,25 @@ namespace Starter3D.Plugin.UniverseSimulator
 
             _shape.Scale = new Vector3(_radius);
             _shape.Position = _position;
+            _shape.Rotation = TextureCorrection;
 
-            _lightUp = new PointLight(Color4.Yellow);
+            _lightUp = new PointLight(Color4.White);
             _lightDown = new PointLight(Color4.Yellow);
             _lightLeft = new PointLight(Color4.Yellow);
             _lightRight = new PointLight(Color4.Yellow);
             _lightFront = new PointLight(Color4.Yellow);
             _lightBack = new PointLight(Color4.Yellow);
             //_lightCenter = new PointLight(Color4.Yellow);
-            
+
+            _axisLine = new Curve("axis"+_axisCounter++, 4);
+            _axisLine.Material = axisMaterial;
+            _axisBottom = new Vertex(_position - _rotAxis * _radius * 1.4f, DummyVector3, DummyVector3);
+            _axisTop = new Vertex(_position + _rotAxis * _radius * 1.4f, DummyVector3, DummyVector3);
+            _axisLine.AddPoint(_axisBottom);
+            _axisLine.AddPoint(_axisTop);
+            _axisLine.Configure(renderer);
+            _axisAlignmentRot = TextureCorrection;
+            _aroundAxisRot = Quaternion.Identity;
         }
 
         public CelestialBody() { }
@@ -184,8 +260,36 @@ namespace Starter3D.Plugin.UniverseSimulator
         public void UpdateVariablesForNextStep()
         {
             Velocity = _nextVelocity;
-            Position = _nextPosition; //por debajo se está seteando laa posiciones de las luces también
+            Position = _nextPosition; //por debajo se están seteando las posiciones de las luces también
             _shape.Position = _nextPosition; //para que la nueva posición se refleje en el shape
+           
+            //actualizar rotación
+            UpdateRotation();
+            
+        }
+
+        public void UpdateRotation()
+        {
+            if (_angularVel == 0) return;
+
+            _angularRot += _angularVel;
+            while (_angularRot >= _2PI)
+                _angularRot -= _2PI;
+            while (_angularRot < 0)
+                _angularRot += _2PI;
+            _aroundAxisRot = Quaternion.FromAxisAngle(_rotAxis, _angularRot);
+            _shape.Rotation = _aroundAxisRot * _axisAlignmentRot;
+        }
+
+        public void UpdateAxisLine()
+        {
+            _axisBottom.Position = _position - _rotAxis * _radius * 1.4f;
+            _axisTop.Position = _position + _rotAxis * _radius * 1.4f;
+            _axisLine.Clear();
+            _axisLine.AddPoint(_axisBottom);
+            _axisLine.AddPoint(_axisTop);
+            _axisLine.Configure(_renderer);
+
         }
 
         // copia todo menos posición y shape
@@ -194,14 +298,17 @@ namespace Starter3D.Plugin.UniverseSimulator
         // Actualmente lo uso en el CelestialBodyViewModel
        public void CopyFrom(CelestialBody other) {
            if (other == null) return;
-           Gravity = other.Gravity;
-           IsLightSource = other.IsLightSource;
-           Mass = other.Mass;
-           Material = other.Material;
-           Name = other.Name;
-           Radius = other.Radius;
-           Velocity = other.Velocity;
+           Gravity = other._hasGravity;
+           IsLightSource = other._isLightSource;
+           Mass = other._mass;
+           Material = other._defaultMaterial;
+           Name = other._name;
+           Radius = other._radius;
+           Velocity = other._velocity;
            NextVelocity = _velocity;           
+           AngularVelocity = other._angularVel;
+           RotationAxis = other._rotAxis;
+           AxisAlignmentRotation = other._axisAlignmentRot;
        }
 
        private void UpdateLightsPositions()
@@ -287,12 +394,158 @@ namespace Starter3D.Plugin.UniverseSimulator
        }
 
 
+       public XElement ToXml()       
+       {
+           XElement element =
+            new XElement("CelestialBody",
+                new XElement("position",
+                    new XElement("x", _position.X),
+                    new XElement("y", _position.Y),
+                    new XElement("z", _position.Z)
+                   ),
+                new XElement("velocity",
+                    new XElement("x", _velocity.X),
+                    new XElement("y", _velocity.Y),
+                    new XElement("z", _velocity.Z)),
+                new XElement("rotAxis",
+                    new XElement("x", _rotAxis.X),
+                    new XElement("y", _rotAxis.Y),
+                    new XElement("z", _rotAxis.Z)),
+                new XElement("axisAlignmentRot",
+                    new XElement("x", _axisAlignmentRot.X),
+                    new XElement("y", _axisAlignmentRot.Y),
+                    new XElement("z", _axisAlignmentRot.Z),
+                    new XElement("w", _axisAlignmentRot.W)),
+                new XElement("aroundAxisRot",
+                    new XElement("x", _aroundAxisRot.X),
+                    new XElement("y", _aroundAxisRot.Y),
+                    new XElement("z", _aroundAxisRot.Z),
+                    new XElement("w", _aroundAxisRot.W)),
+                new XElement("aroundAxisRot",
+                    new XElement("x", _aroundAxisRot.X),
+                    new XElement("y", _aroundAxisRot.Y),
+                    new XElement("z", _aroundAxisRot.Z),
+                    new XElement("w", _aroundAxisRot.W)),
+                new XElement("angularVel",_angularVel),
+                new XElement("angularRot",_angularRot),
+                new XElement("mass",_mass),
+                new XElement("radius",_radius),
+                new XElement("hasGravity",_hasGravity),
+                new XElement("isLightSource",_isLightSource),
+                new XElement("name",_name),
+                new XElement("material",_defaultMaterial.Name)
+            );
+           return element;
+       }
+
+       
+       
+
+
     #region Métodos públicos estáticos auxiliares
+
+        //para crear desde xml
+       public static CelestialBody CreateFromXml(XElement element, IResourceManager resourceManager,
+           ShapeNode shape, IScene scene, IMaterial axisMaterial, IRenderer renderer)
+       {
+           //position
+           Vector3 position = new Vector3();
+           var prop = element.Element("position");
+           position.X = float.Parse(prop.Element("x").Value);
+           position.Y = float.Parse(prop.Element("y").Value);
+           position.Z = float.Parse(prop.Element("z").Value);
+
+           //velocity
+           Vector3 velocity = new Vector3();
+           prop = element.Element("velocity");
+           velocity.X = float.Parse(prop.Element("x").Value);
+           velocity.Y = float.Parse(prop.Element("y").Value);
+           velocity.Z = float.Parse(prop.Element("z").Value);
+
+           //rotAxis
+           Vector3 rotAxis = new Vector3();
+           prop = element.Element("rotAxis");
+           rotAxis.X = float.Parse(prop.Element("x").Value);
+           rotAxis.Y = float.Parse(prop.Element("y").Value);
+           rotAxis.Z = float.Parse(prop.Element("z").Value);
+
+           //axisAlignmentRot
+           Quaternion axisAlignmentRot = new Quaternion();
+           prop = element.Element("axisAlignmentRot");
+           axisAlignmentRot.X = float.Parse(prop.Element("x").Value);
+           axisAlignmentRot.Y = float.Parse(prop.Element("y").Value);
+           axisAlignmentRot.Z = float.Parse(prop.Element("z").Value);
+           axisAlignmentRot.W = float.Parse(prop.Element("w").Value);
+
+           //aroundAxisRot
+           Quaternion aroundAxisRot = new Quaternion();
+           prop = element.Element("aroundAxisRot");
+           aroundAxisRot.X = float.Parse(prop.Element("x").Value);
+           aroundAxisRot.Y = float.Parse(prop.Element("y").Value);
+           aroundAxisRot.Z = float.Parse(prop.Element("z").Value);
+           aroundAxisRot.W = float.Parse(prop.Element("w").Value);
+
+           //angularVel
+           prop = element.Element("angularVel");
+           float angularVel = float.Parse(prop.Value);
+
+           //angularRot
+           prop = element.Element("angularRot");
+           float angularRot = float.Parse(prop.Value);
+
+           //mass
+           prop = element.Element("mass");
+           float mass = float.Parse(prop.Value);
+
+           //radius
+           prop = element.Element("radius");
+           float radius = float.Parse(prop.Value);
+
+           //hasGravity
+           prop = element.Element("hasGravity");
+           bool hasGravity = bool.Parse(prop.Value);
+
+           //isLightSource
+           prop = element.Element("isLightSource");
+           bool isLightSource = bool.Parse(prop.Value);
+
+           //name
+           prop = element.Element("name");
+           string name = prop.Value;
+
+           //material
+           prop = element.Element("material");
+           string materialName = prop.Value;
+           IMaterial material = resourceManager.GetMaterial(materialName);
+
+           var cb = new CelestialBody(position, shape, scene, axisMaterial, renderer);
+           cb.Velocity = velocity;
+           cb.RotationAxis = rotAxis;
+           cb.AxisAlignmentRotation = axisAlignmentRot;
+           cb._aroundAxisRot = aroundAxisRot;
+           cb.AngularVelocity = angularVel;
+           cb._angularRot = angularRot;
+           cb.Mass = mass;
+           cb.Radius = radius;
+           cb.Gravity = hasGravity;
+           cb.IsLightSource = isLightSource;
+           cb.Name = name;
+           cb.Material = material;
+           return cb;
+       }
 
         //Método para encontrar un cuerpo celeste dependiendo del shape
         public static CelestialBody FindCelestialBody(ShapeNode shape)
         {
             return _shapeToCelestialBodyMap[shape];
+        }
+    #endregion
+    #region Métodos privados estáticos auxiliares
+        private static Quaternion GetTextureCorrection() 
+        {
+            var axis = Vector3.Cross(Vector3.UnitY,Vector3.UnitZ);
+            var angle = (float)Math.PI * 0.5f;
+            return Quaternion.FromAxisAngle(axis,angle);            
         }
     #endregion
 

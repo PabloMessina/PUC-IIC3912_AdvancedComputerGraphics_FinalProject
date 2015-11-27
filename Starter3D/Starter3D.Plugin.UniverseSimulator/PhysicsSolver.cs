@@ -139,6 +139,18 @@ namespace Starter3D.Plugin.UniverseSimulator
         //Algoritmo de colisión entre esferas
         private void CheckActualCollision(CelestialBody cb1, CelestialBody cb2)
         {
+            // |(x1 + v1 * t) - (x2 + v2 * t)| = r1 + r2
+            // |(x1 - x2) + t * (v1 - v2)| = r1 + r2
+            // (x1-x2)*(x1-x2) + 2*(x1-x2)*(v1-v2)*t + (v1-v2)*(v1-v2)*t^2 = (r1+r2)^2
+            // 
+            // c =  (x1-x2)*(x1-x2) - (r1+r2)^2
+            // b = 2*(x1-x2)*(v1-v2)
+            // a = (v1-v2)*(v1-v2)
+            // 
+            // a*t^2 + b*t + c = 0
+            // 
+            // t = (-b +/- sqrt(b2 - 4ac))/2a
+
             var x1_rel = cb1.Position - cb2.Position;
             var v1_rel = cb1.Velocity - cb2.Velocity;
 
@@ -149,11 +161,21 @@ namespace Starter3D.Plugin.UniverseSimulator
 
             float t = 999999;
 
+            // chequeo naive
+            if (x1_rel.LengthSquared <= k * k)
+            {
+                RaiseCollisionDetected(cb1, cb2);
+                return;
+            }           
+            
+            // chequeo hard
             if (a != 0)
             {
                 var delta = b * b - 4 * a * c;
                 if (delta < 0)
+                {
                     return;
+                }
                 else
                 {
                     delta = (float)Math.Sqrt(delta);
