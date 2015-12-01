@@ -79,7 +79,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         
 
         //Simulación
-        private bool _simulationRunning = false;
+        private static bool _simulationRunning = false;
         private bool _pauseSimulation = false;
 
         private HashSet<CelestialBody> _gravitySources = new HashSet<CelestialBody>();
@@ -455,8 +455,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             //Para crear nuevos cuerpos celestes lo que hago es tomar el base y crear un clon de este
             //El metodo clon lo hice dentro de ShapeNode
             //_base = _scene.Shapes.ElementAt(0);
-            _velocitySphere = new CelestialBody(new Vector3(0,0,0), _scene.Shapes.ElementAt(1), _scene);                       
-            
+            _velocitySphere = new CelestialBody(new Vector3(0,0,0), _scene.Shapes.ElementAt(1), _scene, _resourceManager.GetMaterials().ElementAt(0), _renderer);            
             //CelestialBody baseCelestialBody = new CelestialBody(new Vector3(0, 0, 0), _base, _scene);
             //_celestialBodies.Add(baseCelestialBody);
             _celestialBodies.Add(_velocitySphere);
@@ -947,7 +946,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             cam.Up = _camBackup.Up;
 
             //actualizar ejes
-            foreach (var cb in _celestialBodies) cb.UpdateAxisLine();
+            //foreach (var cb in _celestialBodies) cb.UpdateAxisLine();
         }
 
         private void RefreshMode()

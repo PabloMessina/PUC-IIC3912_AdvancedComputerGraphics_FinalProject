@@ -328,6 +328,20 @@ namespace Starter3D.Plugin.UniverseSimulator
            _position = other._position;
            _nextPosition = _position;
            _nextVelocity = _velocity;
+
+           _axisLine = new Curve("axis" + _axisCounter++, 4);
+           _axisLine.Material = other._axisLine.Material;
+
+           _axisBottom = other._axisBottom;
+           _axisTop = other._axisTop;
+           _axisLine.AddPoint(_axisBottom);
+           _axisLine.AddPoint(_axisTop);
+           _axisLine.Configure(other._renderer);
+           _axisAlignmentRot = TextureCorrection;
+           _aroundAxisRot = Quaternion.Identity;
+           _renderer = other._renderer;
+           
+           
        }
 
 
