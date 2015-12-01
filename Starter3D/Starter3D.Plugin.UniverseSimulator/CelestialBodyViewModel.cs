@@ -197,6 +197,20 @@ namespace Starter3D.Plugin.UniverseSimulator
                 RaisePropertyChanged("VelocityMagnitude");
             }
         }
+
+        public float AngularVelocity
+        {
+            get { return _hasCelestialBody ? _celestialBody.AngularVelocity : 0; }
+            set
+            {
+                if (_celestialBody == null) return;
+                _celestialBody.AngularVelocity = value;
+                _saved = false;
+                HasChanges = true;
+                RaisePropertyChanged("AngularVelocity");
+            }
+        }
+
         public IMaterial Material
         {
             get { return _hasCelestialBody ? _celestialBody.Material : null; }
@@ -269,7 +283,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             _celestialBody.CopyFrom(_backup);
             _velDirection = _backup.Velocity.Normalized();
-            _velMagnitude = _backup.Velocity.Length;
+            _velMagnitude = _backup.Velocity.Length;            
 
             if (_celestialBody.Gravity) _gravitySources.Add(_celestialBody);
             else _gravitySources.Remove(_celestialBody);
@@ -279,6 +293,42 @@ namespace Starter3D.Plugin.UniverseSimulator
             _feedback = "";
             RaisePropertyChanged();
         }
+
+        float _rotAngle = 0.2f;
+        public void RotateRight()
+        {
+            var rot = _celestialBody.AxisAlignmentRotation;
+            rot = Quaternion.FromAxisAngle(Vector3.UnitY, _rotAngle) * rot;
+            _celestialBody.AxisAlignmentRotation = rot;
+            _saved = false;
+            HasChanges = true;
+        }
+        public void RotateLeft()
+        {
+            var rot = _celestialBody.AxisAlignmentRotation;
+            rot = Quaternion.FromAxisAngle(Vector3.UnitY, -_rotAngle) * rot;
+            _celestialBody.AxisAlignmentRotation = rot;
+            _saved = false;
+            HasChanges = true;
+        }
+        public void RotateUp()
+        {
+            var rot = _celestialBody.AxisAlignmentRotation;
+            rot = Quaternion.FromAxisAngle(Vector3.UnitX, -_rotAngle) * rot;
+            _celestialBody.AxisAlignmentRotation = rot;
+            _saved = false;
+            HasChanges = true;
+        }
+        public void RotateDown()
+        {
+            var rot = _celestialBody.AxisAlignmentRotation;
+            rot = Quaternion.FromAxisAngle(Vector3.UnitX, _rotAngle) * rot;
+            _celestialBody.AxisAlignmentRotation = rot;
+            _saved = false;
+            HasChanges = true;
+        }
+
+
         #endregion
 
     }
