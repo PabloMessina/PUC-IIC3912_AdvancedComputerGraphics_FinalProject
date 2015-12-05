@@ -11,7 +11,7 @@ namespace Starter3D.Plugin.UniverseSimulator
     public class PhysicsSolver
     {
         public static readonly float G = 9.81f;
-        public static readonly float TimeDelta = 0.05f;
+        public static float TimeDelta = 0.05f;
 
         public event HandleCollision CollisionDetected;
 

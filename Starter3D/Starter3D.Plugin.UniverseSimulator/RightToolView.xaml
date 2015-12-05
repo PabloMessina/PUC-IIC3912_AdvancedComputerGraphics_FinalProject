@@ -7,50 +7,96 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
 
-    <Grid x:Name="Grid" Background="#FFECECEC" Width="290" HorizontalAlignment="Right" Margin="0,0,10,-58">
+    <Grid x:Name="Grid" Background="#FFECECEC" Width="290" HorizontalAlignment="Right" Margin="0,0,10,-208">
 
         <Label Content="Name" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="100"/>
         <Label Content="Radius" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="100"/>
         <Label Content="Mass" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top" Width="100"/>
-        <Label Content="Linear Velocity Vector" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top" Width="125" FontSize="10"/>
-        <Label Content="Linear Velocity Magnitude" HorizontalAlignment="Left" Margin="10,108,0,0" VerticalAlignment="Top" Width="142" FontSize="10"/>
-        <Label Content="Has Gravity" HorizontalAlignment="Left" Margin="10,134,0,0" VerticalAlignment="Top" Width="72"/>
-        <Label Content="Has Light" HorizontalAlignment="Left" Margin="152,134,0,0" VerticalAlignment="Top" Width="61"/>
 
-        <Label Content="Material" HorizontalAlignment="Left" Margin="22,199,0,0" VerticalAlignment="Top" Width="100"/>
+        <Label Content="Has Gravity" HorizontalAlignment="Left" Margin="13,191,0,0" VerticalAlignment="Top" Width="72"/>
+        <Label Content="Has Light" HorizontalAlignment="Left" Margin="115,192,0,0" VerticalAlignment="Top" Width="61"/>
 
-        <Rectangle Fill="Black" HorizontalAlignment="Left" Height="2" Margin="0,192,0,0" Stroke="Black" VerticalAlignment="Top" Width="280"/>
+        <Label Content="Material" HorizontalAlignment="Left" Margin="22,264,0,0" VerticalAlignment="Top" Width="100"/>
+
+        <Rectangle Fill="Black" HorizontalAlignment="Left" Height="2" Margin="10,257,0,0" Stroke="Black" VerticalAlignment="Top" Width="280"/>
 
         <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="20" Margin="152,14,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Name}" IsEnabled="{Binding HasCelestialBody}"/>
 
-        
+
         <TextBox x:Name="Radius" HorizontalAlignment="Left" Height="20" Margin="152,39,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Radius, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
         <TextBox x:Name="Mass" HorizontalAlignment="Left" Height="20" Margin="152,64,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"  Text="{Binding Mass, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
-        <TextBox x:Name="VelocityVectorX" HorizontalAlignment="Left" Height="20" Margin="152,89,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityX, StringFormat=N2}" IsEnabled="False"/>
-        <TextBox x:Name="VelocityVectorY" HorizontalAlignment="Left" Height="20" Margin="190,89,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityY, StringFormat=N2}" IsEnabled="False"/>
-        <TextBox x:Name="VelocityVectorZ" HorizontalAlignment="Left" Height="20" Margin="228,89,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="33"  Text="{Binding VelocityZ, StringFormat=N2}" IsEnabled="False"/>
-        <TextBox x:Name="VelocityMagnitude" HorizontalAlignment="Left" Height="20" Margin="152,114,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding VelocityMagnitude, StringFormat=N2}" IsEnabled="False"/>
-        <CheckBox x:Name="HasGravity" Content="" HorizontalAlignment="Left" Margin="87,139,0,0" VerticalAlignment="Top" IsChecked="{Binding HasGravity}" IsEnabled="{Binding HasCelestialBody}"/>
-        <CheckBox x:Name="HasLight" Content="" HorizontalAlignment="Left" Margin="213,139,0,0" VerticalAlignment="Top" IsChecked="{Binding HasLight}" IsEnabled="{Binding HasCelestialBody}"/>
 
-        <ComboBox x:Name="Materials" HorizontalAlignment="Left" Margin="160,203,0,0" VerticalAlignment="Top" Width="120"  ItemsSource="{Binding Materials}" DisplayMemberPath="Name" SelectedValue="{Binding Material}"  IsEnabled="{Binding HasCelestialBody}"/>
+        <CheckBox x:Name="HasGravity" Content="" HorizontalAlignment="Left" Margin="90,199,0,0" VerticalAlignment="Top" IsChecked="{Binding HasGravity}" IsEnabled="{Binding HasCelestialBody}"/>
+        <CheckBox x:Name="HasLight" Content="" HorizontalAlignment="Left" Margin="181,199,0,0" VerticalAlignment="Top" IsChecked="{Binding HasLight}" IsEnabled="{Binding HasCelestialBody}"/>
 
+        <ComboBox x:Name="Materials" HorizontalAlignment="Left" Margin="160,264,0,0" VerticalAlignment="Top" Width="120"  ItemsSource="{Binding Materials}" DisplayMemberPath="Name" SelectedValue="{Binding Material}"  IsEnabled="{Binding HasCelestialBody}"/>
 
-        <Button x:Name="SaveButton" Content="Save" HorizontalAlignment="Left" Margin="28,246,0,0" VerticalAlignment="Top" Width="120" Click="SaveButton_Click"  IsEnabled="{Binding HasChanges}"/>
-        <Button x:Name="ResetButton" Content="Reset" HorizontalAlignment="Left" Margin="28,273,0,0" VerticalAlignment="Top" Width="120" Click="ResetButton_Click" IsEnabled="{Binding HasChanges}"/>
 
         <TextBlock x:Name="FeedbackTextBlock" HorizontalAlignment="Left" Margin="22,326,0,0" VerticalAlignment="Top" Width="237" Height="auto" Text="{Binding Feedback}" Foreground="Red"/>
-        <Button Content="&lt;" HorizontalAlignment="Left" Margin="195,265,0,0" VerticalAlignment="Top" Width="21" Height="30"  PreviewMouseDown="RotateLeft_Click" IsEnabled="{Binding HasCelestialBody}"/>
-        <Button Content="v" HorizontalAlignment="Left" Margin="220,299,0,0" VerticalAlignment="Top" Width="34"  PreviewMouseDown="RotateDown_Click" IsEnabled="{Binding HasCelestialBody}"/>
-        <Button Content="^" HorizontalAlignment="Left" Margin="220,239,0,0" VerticalAlignment="Top" Width="34" PreviewMouseDown="RotateUp_Click" IsEnabled="{Binding HasCelestialBody}"/>
-        <Button Content="&gt;" HorizontalAlignment="Left" Margin="257,265,0,0" VerticalAlignment="Top" Width="20" PreviewMouseDown="RotateRight_Click" Height="30" IsEnabled="{Binding HasCelestialBody}"/>
-        <Label Content="rotate" HorizontalAlignment="Left" Padding="0" Margin="220,272,0,0" VerticalAlignment="Top" />
-        <Label Content="Angular Velocity" HorizontalAlignment="Left" Margin="10,165,0,0" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="152,164,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding AngularVelocity, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
+        <Button Content="&lt;" HorizontalAlignment="Left" Margin="171,317,0,0" VerticalAlignment="Top" Width="23" Height="31"  PreviewMouseDown="RotateLeft_Click" IsEnabled="{Binding HasCelestialBody}"/>
+        <Button Content="v" HorizontalAlignment="Left" Margin="198,353,0,0" VerticalAlignment="Top" Width="39"  PreviewMouseDown="RotateDown_Click" IsEnabled="{Binding HasCelestialBody}" Height="21"/>
+        <Button Content="^" HorizontalAlignment="Left" Margin="198,291,0,0" VerticalAlignment="Top" Width="39" PreviewMouseDown="RotateUp_Click" IsEnabled="{Binding HasCelestialBody}" Height="21"/>
+        <Button Content="&gt;" HorizontalAlignment="Left" Margin="239,317,0,0" VerticalAlignment="Top" Width="23" PreviewMouseDown="RotateRight_Click" Height="31" IsEnabled="{Binding HasCelestialBody}"/>
+        <Label Content="rotate" HorizontalAlignment="Left" Padding="0" Margin="198,325,0,0" VerticalAlignment="Top" Height="15" Width="37" />
+        <Label Content="Angular Velocity" HorizontalAlignment="Left" Margin="13,215,0,0" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="115,218,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="42" Text="{Binding AngularVelocity, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
 
 
 
 
+        <GroupBox HorizontalAlignment="Left" Margin="10,89,0,0" VerticalAlignment="Top" Height="100" Width="262">
+            <GroupBox.Header>
+                <TextBlock FontSize="12">Linear Velocity</TextBlock>
+            </GroupBox.Header>
+            <Grid>
+                <TextBox HorizontalAlignment="Left" Height="21" TextWrapping="Wrap" VerticalAlignment="Top" Width="56" FontSize="10" TextAlignment="Center" Text="{Binding VelocityMagnitude}" IsEnabled="{Binding HasCelestialBody}" Margin="10,42,0,0"/>
+                <TextBlock Text="Velocity Magnitude" HorizontalAlignment="Left" VerticalAlignment="Top" Width="56" FontSize="10" Margin="10,9,0,0" Height="32" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                <TextBlock Text="Velocity Angle" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="50" FontSize="10" Height="26" Padding="0" Margin="95,9,0,0" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                <TextBox HorizontalAlignment="Left" Height="22" TextWrapping="Wrap" FontSize="10" TextAlignment="Center" Text="{Binding VelocityAngle}" VerticalAlignment="Top" Width="46" Margin="99,41,0,0" IsEnabled="{Binding HasCelestialBody}"/>
+                <Button Padding="0" Content="&lt;" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="14" Height="22" Margin="85,42,0,0" Click="RotateVelLeft_Click" IsEnabled="{Binding HasCelestialBody}"/>
+                <Button Padding="0" Content="&gt;" VerticalAlignment="Top" HorizontalAlignment="Left" Width="14" Height="22" Margin="145,41,0,0" Click="RotateVelRight_Click" IsEnabled="{Binding HasCelestialBody}"/>
+                <Border HorizontalAlignment="Left" Height="50" VerticalAlignment="Top" Width="50" BorderBrush="Black" BorderThickness="1" CornerRadius="25" Background="AliceBlue" Margin="182,23,0,0">
+                    <Canvas>
+                        <TextBlock FontSize="8" Canvas.Left="5" Canvas.Top="-5">x</TextBlock>
+                        <TextBlock FontSize="6" Canvas.Left="-11" Canvas.Top="-21">y</TextBlock>
+                        <Path Stroke="Black" StrokeThickness="1" Fill="Black">
+                            <Path.Data>
+                                <GeometryGroup>
+                                    <LineGeometry StartPoint="-10,2" EndPoint="2,2"/>
+                                    <LineGeometry StartPoint="-10,2" EndPoint="-10,-10"/>
+                                    <LineGeometry StartPoint="4,2" EndPoint="0,-0.5"/>
+                                    <LineGeometry StartPoint="4,2" EndPoint="0, 4.5"/>
+                                    <LineGeometry StartPoint="-10,-12" EndPoint="-12.5,-8"/>
+                                    <LineGeometry StartPoint="-10,-12" EndPoint="-7.5,-8"/>
+                                </GeometryGroup>
+                            </Path.Data>
+                        </Path>
+                        <Line X1="25" Y1="25" X2="45" Y2="25" StrokeDashArray="2 2" StrokeThickness="1"  Stroke="Black"/>
+
+                        <Path Stroke="Black" StrokeThickness="1" Fill="Red">
+                            <Path.Data>
+                                <GeometryGroup>
+                                    <GeometryGroup.Transform>
+                                        <RotateTransform CenterX="25" CenterY="25" Angle="{Binding VelocityAngle_Negative}"/>
+                                    </GeometryGroup.Transform>
+                                    <EllipseGeometry Center="25 25" RadiusX="3" RadiusY="3"/>
+                                    <PathGeometry>
+                                        <PathFigure StartPoint="26,24" IsClosed="True">
+                                            <LineSegment Point="40,24"/>
+                                            <LineSegment Point="40,20"/>
+                                            <LineSegment Point="46,25"/>
+                                            <LineSegment Point="40,30"/>
+                                            <LineSegment Point="40,26"/>
+                                            <LineSegment Point="26,26"/>
+                                        </PathFigure>
+                                    </PathGeometry>
+                                </GeometryGroup>
+                            </Path.Data>
+                        </Path>
+                    </Canvas>
+                </Border>
+            </Grid>
+        </GroupBox>
 
     </Grid>
 </UserControl>

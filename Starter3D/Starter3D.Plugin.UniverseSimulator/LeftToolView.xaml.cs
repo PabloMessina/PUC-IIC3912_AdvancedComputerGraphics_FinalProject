@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,12 +40,40 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         public void Hide()
         {
-            this.Grid.Visibility = System.Windows.Visibility.Collapsed;
+            this.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         public void Show()
         {
-            this.Grid.Visibility = System.Windows.Visibility.Visible;
+            this.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.DefaultExt = ".xml";
+            dlg.AddExtension = true;
+            dlg.Filter = "Text documents (.xml)|*.xml";
+            dlg.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory + "resources\\saved_scenes";
+            Nullable<bool> result = dlg.ShowDialog();
+            if (result == true)
+            {
+                _controller.SaveSceneAsXML(dlg.FileName);
+            }
+        }
+
+        private void LoadButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.DefaultExt = ".xml";
+            dlg.AddExtension = true;
+            dlg.Filter = "Text documents (.xml)|*.xml";
+            dlg.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory + "resources\\saved_scenes";
+            Nullable<bool> result = dlg.ShowDialog();
+            if (result == true)
+            {
+                _controller.LoadSceneFromXmlFile(dlg.FileName);
+            }
         }
     }
 }

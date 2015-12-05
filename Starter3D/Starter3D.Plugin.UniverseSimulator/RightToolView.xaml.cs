@@ -26,45 +26,44 @@ namespace Starter3D.Plugin.UniverseSimulator
             InitializeComponent();
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private void RotateVelRight_Click(object sender, RoutedEventArgs e)
         {
-            ((CelestialBodyViewModel)DataContext).Save();
+            ((CelestialBodyViewModel)DataContext).RotateVelocityRight();
         }
 
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
+        private void RotateVelLeft_Click(object sender, RoutedEventArgs e)
         {
-            ((CelestialBodyViewModel)DataContext).Reset();
+            ((CelestialBodyViewModel)DataContext).RotateVelocityLeft();
         }
-
 
         public void Hide()
         {
-            this.Grid.Visibility = System.Windows.Visibility.Collapsed;
+            this.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         public void Show()
         {
-            this.Grid.Visibility = System.Windows.Visibility.Visible;
+            this.Visibility = System.Windows.Visibility.Visible;
         }
 
         private void RotateUp_Click(object sender, MouseButtonEventArgs e)
         {
-            ((CelestialBodyViewModel)DataContext).RotateUp();
+            ((CelestialBodyViewModel)DataContext).RotateBodyUp();
         }
 
         private void RotateDown_Click(object sender, MouseButtonEventArgs e)
         {
-            ((CelestialBodyViewModel)DataContext).RotateDown();
+            ((CelestialBodyViewModel)DataContext).RotateBodyDown();
         }
 
         private void RotateRight_Click(object sender, MouseButtonEventArgs e)
         {
-            ((CelestialBodyViewModel)DataContext).RotateRight();
+            ((CelestialBodyViewModel)DataContext).RotateBodyRight();
         }
 
         private void RotateLeft_Click(object sender, MouseButtonEventArgs e)
         {
-            ((CelestialBodyViewModel)DataContext).RotateLeft();
+            ((CelestialBodyViewModel)DataContext).RotateBodyLeft();
         }
 
 
