@@ -452,12 +452,6 @@ namespace Starter3D.Plugin.UniverseSimulator
             return _bb_frontrightup;
         }
 
-        public void RemoveFromScene()
-        {
-            _scene.RemoveShape(_shape);
-            RemoveLightsFromScene();
-        }
-
         public void BackupForSimulation()
         {
             _simulationBackup.AngularRot = _angularRot;
@@ -659,12 +653,12 @@ namespace Starter3D.Plugin.UniverseSimulator
             return _shapeToCelestialBodyMap[shape];
         }
 
-        public static void ClearCelestialBody(ShapeNode shape)
+        public static void RemoveCelestialBodyFromMap(ShapeNode shape)
         {
             _shapeToCelestialBodyMap.Remove(shape);
         }
 
-        public static void AddCelestialBodies(CelestialBody celestialBody, ShapeNode shape)
+        public static void AddCelestialBodyToMap(CelestialBody celestialBody, ShapeNode shape)
         {
             _shapeToCelestialBodyMap.Add(shape, celestialBody);
         }

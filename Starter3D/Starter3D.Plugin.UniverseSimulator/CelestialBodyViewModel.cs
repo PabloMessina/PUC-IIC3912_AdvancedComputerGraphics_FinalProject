@@ -15,6 +15,9 @@ namespace Starter3D.Plugin.UniverseSimulator
     public class CelestialBodyViewModel : ViewModelBase
     {
         #region Campos privados
+
+        private UniverseSimulatorController _controller;
+
         //referencia al celestialBody wrappeado
         private CelestialBody _celestialBody = null;
         //private CelestialBody _backup = new CelestialBody(); //para backupear y poder resetear los cambios
@@ -39,8 +42,10 @@ namespace Starter3D.Plugin.UniverseSimulator
         #endregion
 
         //constructor
-        public CelestialBodyViewModel(HashSet<CelestialBody> gravitySources, IEnumerable<IMaterial> materials)
+        public CelestialBodyViewModel(UniverseSimulatorController controller, 
+            HashSet<CelestialBody> gravitySources, IEnumerable<IMaterial> materials)
         {
+            _controller = controller;
             _gravitySources = gravitySources;
             _materials = materials;
         }
@@ -374,6 +379,13 @@ namespace Starter3D.Plugin.UniverseSimulator
 
             RaisePropertyChanged("VelocityAngle");
             RaisePropertyChanged("VelocityAngle_Negative");
+        }
+
+        // Borrar el celestial body seleccionado
+        public void Delete()
+        {
+            _controller.DestroyCelestialBodySelected(_celestialBody);
+            this.CelestialBody = null;
         }
 
 

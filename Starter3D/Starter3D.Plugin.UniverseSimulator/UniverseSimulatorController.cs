@@ -438,9 +438,9 @@ namespace Starter3D.Plugin.UniverseSimulator
             }
 
             //seteamos data contexts para las vistas
-            _selectedViewModel = new CelestialBodyViewModel(_gravitySources, materials);
+            _selectedViewModel = new CelestialBodyViewModel(this, _gravitySources, materials);
             _rightView.DataContext = _selectedViewModel;
-            _bottomView.DataContext = this;            
+            _bottomView.DataContext = this;
             _topView.DataContext = this;
 
             SetMode(Mode.Insert);
@@ -454,7 +454,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             var destroyed = cb1.Mass < cb2.Mass ? cb1 : cb2;
             _solver.SetAsDestroyed(destroyed);
             _celestialBodies.Remove(destroyed);
-            _scene.RemoveShape(destroyed.Shape);
+            destroyed.RemoveLightsFromScene();
             if (destroyed.HasGravity) _gravitySources.Remove(destroyed);
         }
 
@@ -485,7 +485,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             _base = _scene.Shapes.ElementAt(0);
             CelestialBody baseCelestialBody =
                 new CelestialBody(
-                    new Vector3(0, 0, 0),
+                    Vector3.Zero,
                     _base, _scene,
                     _resourceManager.GetMaterial("yellow"),
                     _renderer);
@@ -497,6 +497,9 @@ namespace Starter3D.Plugin.UniverseSimulator
             _skybox = new Cube("skybox", -hsize, -hsize, -hsize, size, size, size);
             _skybox.Material = _resourceManager.GetMaterial("skyboxMaterial");
             _skybox.Configure(_renderer);
+
+            //borramos los shapes de _scene ya que queremos renderearlos explícitamente nosotros
+            _scene.ClearShapes();
         }
 
         private void InitRenderer()
@@ -510,6 +513,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         public void Render(double deltaTime)
         {
             //render scene
+            
             _scene.Render(_renderer);
 
             //_velocitySphere.Shape.Render(_renderer);
@@ -611,8 +615,8 @@ namespace Starter3D.Plugin.UniverseSimulator
                     if (intersect)
                     {
                         //Si se selecciona la esfera de cambio de velocidad se guarda la esfera seleccionada anteriormente
-                       // if (picked == _velocitySphere.Shape)
-                            //_selectedToChangeVelocity = _selected;
+                        // if (picked == _velocitySphere.Shape)
+                        //_selectedToChangeVelocity = _selected;
 
 
                         _selected = picked;
@@ -622,7 +626,7 @@ namespace Starter3D.Plugin.UniverseSimulator
 
                         //Si es que el objeto seleccionado no es la esfera de cambio de velocidad, entonces esta se mueve segun la velocidad del cuerpo seleccionado
                         ///if (picked != _velocitySphere.Shape)
-                           // SetVelocityPoint();
+                        // SetVelocityPoint();
 
 
                     }
@@ -1005,51 +1009,51 @@ namespace Starter3D.Plugin.UniverseSimulator
         }
 
 
-       //private void BackUpScene()
-       //{
-       //    _celestialBodiesBackup = new List<CelestialBody>();
-       //    CelestialBody oldVelocitySphere = null;
-       //    List<CameraNode> cameras = new List<CameraNode>();
-       //    foreach (CameraNode c in _scene.Cameras)
-       //    {
-       //        cameras.Add(c);
-       //    }
-       //    List<ShapeNode> shapes = new List<ShapeNode>();
-       //    foreach (ShapeNode s in _scene.Shapes)
-       //    {
-       //        CelestialBody newBody = new CelestialBody();
-       //        CelestialBody oldBody = CelestialBody.FindCelestialBody(s);
-       //        ShapeNode clone = s.Clone();
-       //        newBody.Clone(oldBody);
-       //        newBody.Shape = clone;
-       //        shapes.Add(clone);
-       //        clone.Configure(_renderer);
-       //        _celestialBodiesBackup.Add(newBody);
-       //        CelestialBody.ClearCelestialBody(s);
-       //        CelestialBody.AddCelestialBodies(newBody, clone);
-       //
-       //        /*
-       //        if (s == _velocitySphere.Shape)
-       //        {
-       //            oldVelocitySphere = _velocitySphere;
-       //            _velocitySphere = newBody;
-       //        }*/
-       //
-       //
-       //    }
-       //    List<LightNode> lights = new List<LightNode>();
-       //    foreach (LightNode l in _scene.Lights)
-       //    {
-       //        lights.Add(l);
-       //    }
-       //
-       //    //Limpiar la esfera de velocidad al comenzar la simulacion
-       //    _scene.RemoveShape(oldVelocitySphere.Shape);
-       //    CelestialBody.ClearCelestialBody(oldVelocitySphere.Shape);
-       //    _celestialBodies.Remove(oldVelocitySphere);
-       //
-       //    _sceneBackup = new Scene(cameras, shapes, lights);
-       //}
+        //private void BackUpScene()
+        //{
+        //    _celestialBodiesBackup = new List<CelestialBody>();
+        //    CelestialBody oldVelocitySphere = null;
+        //    List<CameraNode> cameras = new List<CameraNode>();
+        //    foreach (CameraNode c in _scene.Cameras)
+        //    {
+        //        cameras.Add(c);
+        //    }
+        //    List<ShapeNode> shapes = new List<ShapeNode>();
+        //    foreach (ShapeNode s in _scene.Shapes)
+        //    {
+        //        CelestialBody newBody = new CelestialBody();
+        //        CelestialBody oldBody = CelestialBody.FindCelestialBody(s);
+        //        ShapeNode clone = s.Clone();
+        //        newBody.Clone(oldBody);
+        //        newBody.Shape = clone;
+        //        shapes.Add(clone);
+        //        clone.Configure(_renderer);
+        //        _celestialBodiesBackup.Add(newBody);
+        //        CelestialBody.ClearCelestialBody(s);
+        //        CelestialBody.AddCelestialBodies(newBody, clone);
+        //
+        //        /*
+        //        if (s == _velocitySphere.Shape)
+        //        {
+        //            oldVelocitySphere = _velocitySphere;
+        //            _velocitySphere = newBody;
+        //        }*/
+        //
+        //
+        //    }
+        //    List<LightNode> lights = new List<LightNode>();
+        //    foreach (LightNode l in _scene.Lights)
+        //    {
+        //        lights.Add(l);
+        //    }
+        //
+        //    //Limpiar la esfera de velocidad al comenzar la simulacion
+        //    _scene.RemoveShape(oldVelocitySphere.Shape);
+        //    CelestialBody.ClearCelestialBody(oldVelocitySphere.Shape);
+        //    _celestialBodies.Remove(oldVelocitySphere);
+        //
+        //    _sceneBackup = new Scene(cameras, shapes, lights);
+        //}
 
         //private void UnBackUpScene()
         //{
@@ -1133,12 +1137,13 @@ namespace Starter3D.Plugin.UniverseSimulator
             //---------------------------------------------------------------------
 
             //removemos todos los objetos antiguos
-            _celestialBodies.ForEach(cb => { 
-                CelestialBody.ClearCelestialBody(cb.Shape);
-                cb.RemoveFromScene();
+            _celestialBodies.ForEach(cb =>
+            {
+                CelestialBody.RemoveCelestialBodyFromMap(cb.Shape);
+                cb.RemoveLightsFromScene();
             });
             _celestialBodies.Clear();
-            _gravitySources.Clear();          
+            _gravitySources.Clear();
 
             //agregamos los elementos recién creados
             foreach (var cb in cbList)
@@ -1149,8 +1154,18 @@ namespace Starter3D.Plugin.UniverseSimulator
 
             //seteamos algunas variables a null
             _hover = null;
-            _selected = null; 
+            _selected = null;
 
+        }
+
+        public void DestroyCelestialBodySelected(CelestialBody cb)
+        {
+            cb.RemoveLightsFromScene();
+            CelestialBody.RemoveCelestialBodyFromMap(cb.Shape);
+            _celestialBodies.Remove(cb);
+            if (cb.HasGravity) _gravitySources.Remove(cb);
+            _selected = null;
+            _hover = null;
         }
 
     }

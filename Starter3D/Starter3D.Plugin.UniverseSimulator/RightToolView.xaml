@@ -41,6 +41,8 @@
         <Label Content="Angular Velocity" HorizontalAlignment="Left" Margin="13,215,0,0" VerticalAlignment="Top"/>
         <TextBox HorizontalAlignment="Left" Height="23" Margin="115,218,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="42" Text="{Binding AngularVelocity, StringFormat=N2}" IsEnabled="{Binding HasCelestialBody}"/>
 
+        <Button x:Name="DeleteButton" Content="Delete" HorizontalAlignment="Left" Margin="22,309,0,0" VerticalAlignment="Top" Width="120" Click="DeleteButton_Click" IsEnabled="{Binding HasCelestialBody}"/>
+
 
 
 

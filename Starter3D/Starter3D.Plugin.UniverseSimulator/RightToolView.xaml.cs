@@ -66,6 +66,11 @@ namespace Starter3D.Plugin.UniverseSimulator
             ((CelestialBodyViewModel)DataContext).RotateBodyLeft();
         }
 
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            ((CelestialBodyViewModel)DataContext).Delete();
+        }
+
 
     }
 }
