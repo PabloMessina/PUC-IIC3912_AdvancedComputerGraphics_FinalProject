@@ -64,11 +64,17 @@ namespace Starter3D.Plugin.UniverseSimulator
         //Picking
         private IMaterial _hoverMaterial;
         private IMaterial _selectedMaterial;
+        private IMaterial _velBallSelectedMaterial;
 
         //Materiales temporales para volver al material original de los objetos que se les hacen picking
         private IMaterial _materialDefault;
-        private ShapeNode _hover;
-        private ShapeNode _selected;
+        //private CelestialBody _selected;
+        //private CelestialBody _hover;
+        private CelestialBody _selectedCB;
+        private CelestialBody _hoverCB;
+        private bool _selectedIsVelBall = false;
+        private bool _hoverIsVelBall = false;
+
         //private ShapeNode _selectedToChangeVelocity
 
         //ViewModel para el cuerpo celeste actualmente seleccionado
@@ -80,9 +86,11 @@ namespace Starter3D.Plugin.UniverseSimulator
         private ShapeNode _base;
         //private CelestialBody _velocitySphere;
 
+        private IMaterial _axisMaterial;
+        private IMaterial _velocityMaterial;
 
         //Simulación
-        private static bool _simulationRunning = false;
+        private bool _simulationRunning = false;
         private bool _pauseSimulation = false;
 
         private HashSet<CelestialBody> _gravitySources = new HashSet<CelestialBody>();
@@ -101,7 +109,7 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         #endregion
 
-        public static bool SimulationRunning { get { return _simulationRunning; } }
+        public bool IsInMode(Mode mode) { return mode == _mode; }
 
         public double SimulationTimeStepMaximum { get { return 1000; } }
         public double SimulationTimeStepMinimum { get { return 1; } }
@@ -475,20 +483,32 @@ namespace Starter3D.Plugin.UniverseSimulator
             //_celestialBodies.Add(_velocitySphere);
 
             //Cargar los materias de hover y select de cuerpos celestes
-            _materialDefault = _resourceManager.GetMaterials().ElementAt(0);
-            _selectedMaterial = _resourceManager.GetMaterials().ElementAt(1);
-            _hoverMaterial = _resourceManager.GetMaterials().ElementAt(2);
+            _materialDefault = _resourceManager.GetMaterial("redSpecular");
+            _selectedMaterial = _resourceManager.GetMaterial("blueDiffuse");
+            _hoverMaterial = _resourceManager.GetMaterial("yellowSpecular");
+            _velocityMaterial = _resourceManager.GetMaterial("orangeDiffuse");
+            _axisMaterial = _resourceManager.GetMaterial("yellow");
+            _velBallSelectedMaterial = _resourceManager.GetMaterial("greenDiffuse");
 
             //Cuerpo celeste base
             //Para crear nuevos cuerpos celestes lo que hago es tomar el base y crear un clon de este
             //El metodo clon lo hice dentro de ShapeNode
             _base = _scene.Shapes.ElementAt(0);
+
+            //shape para la pelotita de velocidad
+            ShapeNode velBall = _base.Clone();
+            velBall.Shape.Material = _velocityMaterial;
+            velBall.Configure(_renderer);
+
             CelestialBody baseCelestialBody =
                 new CelestialBody(
+                    this,
                     Vector3.Zero,
                     _base, _scene,
-                    _resourceManager.GetMaterial("yellow"),
-                    _renderer);
+                    _axisMaterial,
+                    _renderer,
+                    velBall,
+                    _velocityMaterial);
             _celestialBodies.Add(baseCelestialBody);
 
             //inicializamos el skybox
@@ -513,17 +533,22 @@ namespace Starter3D.Plugin.UniverseSimulator
         public void Render(double deltaTime)
         {
             //render scene
-            
             _scene.Render(_renderer);
 
             //_velocitySphere.Shape.Render(_renderer);
-
-            //render celestial bodies
-            _celestialBodies.ForEach(cb => cb.Shape.Render(_renderer));
-
-            //render axes
-            if (_mode != Mode.Simulate)
-                _celestialBodies.ForEach(cb => cb.AxisLine.Render(_renderer, Matrix4.Identity));
+            if (_mode == Mode.Simulate)
+            {
+                _celestialBodies.ForEach(cb => cb.Shape.Render(_renderer)); //sólo cuerpo
+            }
+            else
+            {
+                _celestialBodies.ForEach(cb => {
+                    cb.Shape.Render(_renderer); //cuerpo
+                    cb.AxisLine.Render(_renderer, Matrix4.Identity); //eje
+                    cb.VelocityLine.Render(_renderer, Matrix4.Identity); //línea de velocidad
+                    cb.VelocityBall.Render(_renderer); //pelotita de velocidad
+                });
+            }
 
             //render skybox
             if (_cameraDirty)
@@ -569,15 +594,21 @@ namespace Starter3D.Plugin.UniverseSimulator
                 if (_mode == Mode.Insert)
                 {
                     Vector3 mousePoint = GetMouseWorldPosition(x, y);
-                    //Clonar y agregar a la escena
+
+                    //Clonar shape para el celestial body
                     ShapeNode celestialBodyNode = _base.Clone();
                     celestialBodyNode.Shape.Material = _materialDefault;
                     celestialBodyNode.Configure(_renderer);
 
+                    //Clonar shape para pelotita de velocidad
+                    ShapeNode velBall = _base.Clone();
+                    velBall.Shape.Material = _velocityMaterial;
+                    velBall.Configure(_renderer);
+
                     //Agregar cuerpo celeste a la lista de cuerpos celestes
                     CelestialBody celestialBody =
-                        new CelestialBody(mousePoint, celestialBodyNode,
-                            _scene, _resourceManager.GetMaterial("yellow"), _renderer);
+                        new CelestialBody(this, mousePoint, celestialBodyNode,
+                            _scene, _axisMaterial, _renderer, velBall, _velocityMaterial);
                     _celestialBodies.Add(celestialBody);
                 }
                 else if (_mode == Mode.Pick)
@@ -589,55 +620,98 @@ namespace Starter3D.Plugin.UniverseSimulator
                     rayDir.Normalized();
 
                     bool intersect = false;
+                    bool pickedAVelBall = false;
                     float distance = float.MaxValue;
 
-                    ShapeNode picked = null;
+                    CelestialBody pickedCB = null;
 
                     //Reviso cada objeto de la escena y lanzo un rayo para ver la interseccion                    
                     foreach (CelestialBody cb in _celestialBodies)
                     {
+
+                        //chequeamos intersección con celestial body
                         float distance_t = 0;
                         bool intersect_t = SphereLineIntersection(cb.Position, cb.Radius, rayOrigin, rayDir, out distance_t);
-
                         if (intersect_t && distance > distance_t && distance_t > 0)
                         {
                             distance = distance_t;
-                            picked = cb.Shape;
+                            pickedCB = cb;
                             intersect = true;
+                            pickedAVelBall = false;
+                        }
+
+                        //chequeamos intersección con la pelotita de velocidad
+                        distance_t = 0;
+                        intersect_t = SphereLineIntersection(
+                            cb.VelocityBallPosition,
+                            cb.VelocityBallRadius,
+                            rayOrigin, rayDir, out distance_t);
+                        if (intersect_t && distance > distance_t && distance_t > 0)
+                        {
+                            distance = distance_t;
+                            pickedCB = cb;
+                            intersect = true;
+                            pickedAVelBall = true;
+                        }
+
+                    }
+
+                    //si hay intersección
+                    if (intersect)
+                    {
+                        //si habíamos intersectado algo antes, tenemos que chequear
+                        //qué era para ver si hay que restaurar materiales originales
+                        if (_selectedCB != null)
+                        {
+                            //si intersectamos el mismo cb (o su respectiva vel ball)
+                            if (_selectedCB == pickedCB)
+                            {
+                                //si antes era una vel ball pero ahora no
+                                if (_selectedIsVelBall && !pickedAVelBall)
+                                {
+                                    //devolvemos a material default para vel balls
+                                    _selectedCB.VelocityBall.Shape.Material = _velocityMaterial;
+                                }
+                            }
+                            // intersectamos un cb diferente
+                            else
+                            {
+                                //restauramos tanto shape como vel ball a sus materiales originales
+                                _selectedCB.VelocityBall.Shape.Material = _velocityMaterial;
+                                _selectedCB.Shape.Shape.Material = _selectedCB.Material;
+                            }
+                        }
+
+                        //pickeamos una vel ball: hacemos que tanto la vel ball como el shape se vean
+                        //pickeados
+                        if (pickedAVelBall)
+                        {
+                            pickedCB.Shape.Shape.Material = _selectedMaterial;
+                            pickedCB.VelocityBall.Shape.Material = _velBallSelectedMaterial;
+                        }
+                        //pickeamos el shape del cb: sólo mostramos el shape como pickeado
+                        else
+                        {
+                            pickedCB.Shape.Shape.Material = _selectedMaterial;
                         }
                     }
 
-                    if (_selected != null && _selected != picked)
-                    {
-                        _selected.Shape.Material = CelestialBody.FindCelestialBody(_selected).Material;
-                    }
-
-                    if (intersect)
-                    {
-                        //Si se selecciona la esfera de cambio de velocidad se guarda la esfera seleccionada anteriormente
-                        // if (picked == _velocitySphere.Shape)
-                        //_selectedToChangeVelocity = _selected;
-
-
-                        _selected = picked;
-                        _selected.Shape.Material = _selectedMaterial;
-                        _selectedViewModel.CelestialBody = CelestialBody.FindCelestialBody(_selected);
-                        _hover = null;
-
-                        //Si es que el objeto seleccionado no es la esfera de cambio de velocidad, entonces esta se mueve segun la velocidad del cuerpo seleccionado
-                        ///if (picked != _velocitySphere.Shape)
-                        // SetVelocityPoint();
-
-
-                    }
+                    //no hay intersección (se hizo click en el vacío)
                     else
                     {
-                        _selected = null;
-                        _selectedViewModel.CelestialBody = null;
-
-                        //UnSetVelocityPoint();
-
+                        //habíamos pickeado algo antes, restauramos sus materials originales
+                        if (_selectedCB != null)
+                        {
+                            _selectedCB.VelocityBall.Shape.Material = _velocityMaterial;
+                            _selectedCB.Shape.Shape.Material = _selectedCB.Material;
+                        }
                     }
+
+                    //finalmente, actualizamos variables
+                    _selectedCB = pickedCB;
+                    _selectedViewModel.CelestialBody = pickedCB;
+                    _selectedIsVelBall = pickedAVelBall;
+                    _hoverCB = null;
 
                 }
 
@@ -707,23 +781,26 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             if (_mode == Mode.Pick)
             {
-                //Arrastar un planeta
+                //Arrastar un celestial body
                 if (_isMouseDownLeft)
                 {
-                    //Si hay un planeta seleccionado
-                    if (_selected != null)
+                    //Si hay un celestial body seleccionado
+                    if (_selectedCB != null)
                     {
                         Vector3 mousePoint = GetMouseWorldPosition(x, y);
-                        var cb = CelestialBody.FindCelestialBody(_selected);
-                        cb.Position = mousePoint;
-                        cb.NextPosition = mousePoint;
-                        cb.Shape.Position = mousePoint;
 
-                        /*
-                        if (_selected != _velocitySphere.Shape)
+                        //lo seleccionado es la vel ball del cb
+                        if (_selectedIsVelBall)
                         {
-                            SetVelocityPoint();
-                        }*/
+                            _selectedCB.AlignVelocityWithPoint(mousePoint.Xy);
+                        }
+                        //lo seleccionado es el shape del cb
+                        else
+                        {
+                            _selectedCB.Position = mousePoint;
+                            _selectedCB.NextPosition = mousePoint;
+                            _selectedCB.Shape.Position = mousePoint;
+                        }
                     }
 
                 }
@@ -732,7 +809,6 @@ namespace Starter3D.Plugin.UniverseSimulator
                     _scene.CurrentCamera.Drag(deltaX, deltaY);
                     _cameraDirty = true;
                 }
-
                 else
                 {
 
@@ -745,22 +821,53 @@ namespace Starter3D.Plugin.UniverseSimulator
                     bool intersect = false;
                     float distance = float.MaxValue;
 
+                    CelestialBody hoverCB = null;
+                    bool hoverIsVelBall = false;
+
                     //Reviso cada objeto de la escena y lanzo un rayo para ver la interseccion
                     foreach (CelestialBody cb in _celestialBodies)
                     {
-                        if (Intersect(ref rayOrigin, ref rayDir, ref distance, cb))
+                        //intersección con shape
+                        float distance_t = 0;
+                        bool intersect_t = SphereLineIntersection(cb.Position, cb.Radius, rayOrigin, rayDir, out distance_t);
+                        if (intersect_t && distance > distance_t && distance_t > 0)
+                        {
+                            distance = distance_t;
+                            hoverCB = cb;
+                            hoverIsVelBall = false;
                             intersect = true;
+                        }
+
+                        //intersección con vel ball
+                        distance_t = 0;
+                        intersect_t = SphereLineIntersection(cb.VelocityBallPosition, cb.VelocityBallRadius, rayOrigin, rayDir, out distance_t);
+                        if (intersect_t && distance > distance_t && distance_t > 0)
+                        {
+                            distance = distance_t;
+                            hoverCB = cb;
+                            hoverIsVelBall = true;
+                            intersect = true;
+                        }
                     }
 
+                    //si antes había alguien en hover y es diferente al hover actual (puede ser null)
+                    //entonces tenemos que restaurar su material original
+                    if (_hoverCB != null && _hoverCB != hoverCB)
+                    {
+                        if (_hoverIsVelBall)
+                            _hoverCB.VelocityBall.Shape.Material = _velocityMaterial;
+                        else if( _hoverCB != _selectedCB)
+                            _hoverCB.Shape.Shape.Material = _hoverCB.Material;
+                    }
                     if (intersect)
                     {
-                        _hover.Shape.Material = _hoverMaterial;
+                        if (hoverIsVelBall)
+                            hoverCB.VelocityBall.Shape.Material = _hoverMaterial;
+                        else if(hoverCB != _selectedCB)
+                            hoverCB.Shape.Shape.Material = _hoverMaterial;
                     }
-                    else if (_hover != null)
-                    {
-                        _hover.Shape.Material = CelestialBody.FindCelestialBody(_hover).Material;
-                        _hover = null;
-                    }
+                    _hoverCB = hoverCB;
+                    _hoverIsVelBall = hoverIsVelBall;
                 }
             }
             else if (_mode == Mode.Insert)
@@ -788,7 +895,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             }
 
         }
-
+        /*
         private bool Intersect(ref Vector3 rayOrigin, ref Vector3 rayDir, ref float distance, CelestialBody cb)
         {
             if (cb.Shape == _selected)
@@ -804,7 +911,7 @@ namespace Starter3D.Plugin.UniverseSimulator
                 return true;
             }
             return false;
-        }
+        }*/
 
         #endregion
 
@@ -885,7 +992,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         {
             _width = (float)width;
             _height = (float)height;
-
+            
             var perspectiveCamera = _scene.CurrentCamera as PerspectiveCamera;
             if (perspectiveCamera != null)
                 perspectiveCamera.AspectRatio = (float)(width / height);
@@ -945,15 +1052,23 @@ namespace Starter3D.Plugin.UniverseSimulator
         private void LeavePickMode()
         {
             //si hay uno seleccionado, le seteamos el material default
-            if (_selected != null)
-                _selected.Shape.Material = CelestialBody.FindCelestialBody(_selected).Material;
+            if (_selectedCB != null)
+            {                
+                _selectedCB.VelocityBall.Shape.Material = _velocityMaterial;
+                _selectedCB.Shape.Shape.Material = _selectedCB.Material;
+                _selectedCB = null;
+            }
 
-            //UnSetVelocityPoint();
+            if (_hoverCB != null)
+            {
+                _hoverCB.VelocityBall.Shape.Material = _velocityMaterial;
+                _hoverCB.Shape.Shape.Material = _selectedCB.Material;
+                _hoverCB = null;
+            }
 
             //seteamos el celestial body a null en el viewmodel para que
             //los inputs de la vista de edición se bloqueen automáticamente
             _selectedViewModel.CelestialBody = null;
-            _selected = null;
         }
 
         private void LeaveSimulateMode()
@@ -1120,13 +1235,17 @@ namespace Starter3D.Plugin.UniverseSimulator
                 shape.Shape.Material = _materialDefault;
                 shape.Configure(_renderer);
 
+                var velBall = _base.Clone();
+                velBall.Shape.Material = _velocityMaterial;
+                velBall.Configure(_renderer);
+
                 var cb = CelestialBody.CreateFromXml(
                     xchild,
                     _resourceManager,
                     shape,
                     _scene,
                     _resourceManager.GetMaterial("yellow"),
-                    _renderer);
+                    _renderer, velBall ,_velocityMaterial, this);
                 cbList.Add(cb);
             }
 
@@ -1153,8 +1272,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             }
 
             //seteamos algunas variables a null
-            _hover = null;
-            _selected = null;
+            _hoverCB = null;
+            _selectedCB = null;
 
         }
 
@@ -1164,8 +1283,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             CelestialBody.RemoveCelestialBodyFromMap(cb.Shape);
             _celestialBodies.Remove(cb);
             if (cb.HasGravity) _gravitySources.Remove(cb);
-            _selected = null;
-            _hover = null;
+            _selectedCB = null;
+            _hoverCB = null;
         }
 
     }

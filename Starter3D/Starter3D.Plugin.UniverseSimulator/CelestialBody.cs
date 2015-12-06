@@ -16,10 +16,14 @@ using System.Xml.Linq;
 
 namespace Starter3D.Plugin.UniverseSimulator
 {
+
+    public delegate void HandleVelocityChanged(Vector3 newDir, float newLength);
     public struct CB_Simulation_Backup
     {
         public Vector3 Position;
         public Vector3 Velocity;
+        public Vector3 VelocityDirection;
+        public float VelocityLength;
         public Vector3 RotAxis;
         public Quaternion AxisAlignmentRot;
         public Quaternion AroundAxisRot;
@@ -29,6 +33,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         public float Radius;
         public bool HasGravity;
         public bool IsLightSource;
+        
     }
 
     public class CelestialBody
@@ -39,6 +44,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         private static readonly Quaternion TextureCorrection = GetTextureCorrection();
         private static Vector3 DummyVector3 = Vector3.Zero;
         private static int _axisCounter = 0;
+        private static int _velLineCounter = 0;
 
         //Diccionario estático para registrar y encontrar eficientemente celestial bodies
         private static Dictionary<ShapeNode, CelestialBody> _shapeToCelestialBodyMap = new Dictionary<ShapeNode, CelestialBody>();
@@ -46,6 +52,8 @@ namespace Starter3D.Plugin.UniverseSimulator
         //Atributos del cuerpo celeste
         private Vector3 _position;
         private Vector3 _velocity;
+        private Vector3 _velDir;
+        private float _velLength;
         private Vector3 _rotAxis;
         private Quaternion _axisAlignmentRot;
         private Quaternion _aroundAxisRot;
@@ -84,15 +92,37 @@ namespace Starter3D.Plugin.UniverseSimulator
         private IVertex _axisBottom;
         private IVertex _axisTop;
 
+        //Línea para representar el vector de velocidad
+        private ICurve _velLine;
+        private IVertex _velOrigin;
+        private IVertex _velTip;
+        ShapeNode _velBall;
+        private Vector3 _velBallPos;
+        private float _velBallRadius;
+
         //Referencia al scene
         private IScene _scene;
 
         //Referencia al renderer
         private IRenderer _renderer;
 
+        //Referencia al controller
+        private UniverseSimulatorController _controller;
+
         //backup struct para la simulación
         CB_Simulation_Backup _simulationBackup;
 
+        #endregion
+
+        #region public events
+        public event HandleVelocityChanged VelocityChanged;
+        #endregion
+
+        #region private event callers
+        private void RaiseVelocityChanged()
+        {
+            if (VelocityChanged != null) VelocityChanged(_velDir, _velLength);
+        }
         #endregion
 
         #region getters y setters
@@ -109,17 +139,39 @@ namespace Starter3D.Plugin.UniverseSimulator
             set
             {
                 _position = value;
-                if (_isLightInScene)
-                    UpdateLightsPositions();
-                if (!UniverseSimulatorController.SimulationRunning)
+                if (_isLightInScene) UpdateLightsPositions();
+                if (!_controller.IsInMode(Mode.Simulate))
+                {
                     UpdateAxisLine();
+                    UpdateVelocityLineAndBall();
+                }
             }
         }
 
-        public Vector3 Velocity
+        public Vector3 Velocity { get { return _velocity; } set { _velocity = value; } }
+
+        public Vector3 VelocityDirection
         {
-            get { return _velocity; }
-            set { _velocity = value; }
+            get { return _velDir; }
+            set
+            {
+                _velDir = value;
+                _velocity = _velDir * _velLength;
+                _nextVelocity = _velocity;
+                if (!_controller.IsInMode(Mode.Simulate)) UpdateVelocityLineAndBall();
+            }
+        }
+
+        public float VelocityLength
+        {
+            get { return _velLength; }
+            set
+            {
+                _velLength = value;
+                _velocity = _velDir * _velLength;
+                _nextVelocity = _velocity;
+                if (!_controller.IsInMode(Mode.Simulate)) UpdateVelocityLineAndBall();
+            }
         }
 
         public Vector3 NextPosition
@@ -133,6 +185,9 @@ namespace Starter3D.Plugin.UniverseSimulator
             get { return _nextVelocity; }
             set { _nextVelocity = value; }
         }
+
+        public Vector3 VelocityBallPosition { get { return _velBallPos; } }
+        public float VelocityBallRadius { get { return _velBallRadius; } }
 
         public Vector3 RotationAxis
         {
@@ -176,8 +231,12 @@ namespace Starter3D.Plugin.UniverseSimulator
                 _radius = value;
                 if (_shape != null)
                     _shape.Scale = new Vector3(_radius);
-                if (_axisBottom != null && !UniverseSimulatorController.SimulationRunning)
+                if (!_controller.IsInMode(Mode.Simulate))
+                {
                     UpdateAxisLine();
+                    UpdateVelocityLineAndBall();
+                    if(_isLightInScene) UpdateLightsPositions();
+                }
             }
         }
 
@@ -220,15 +279,17 @@ namespace Starter3D.Plugin.UniverseSimulator
             set { _shape = value; }
         }
 
-        public ICurve AxisLine
-        {
-            get { return _axisLine; }
-        }
+        public ICurve AxisLine { get { return _axisLine; } }
+        public ICurve VelocityLine { get { return _velLine; } }
+        public ShapeNode VelocityBall { get { return _velBall; } }
+
 
         #endregion
 
-        public CelestialBody(Vector3 position, ShapeNode shape, IScene scene, IMaterial axisMaterial, IRenderer renderer)
+        public CelestialBody(UniverseSimulatorController controller, Vector3 position, ShapeNode shape,
+            IScene scene, IMaterial axisMaterial, IRenderer renderer, ShapeNode velShape, IMaterial velMaterial)
         {
+            _controller = controller;
             _shape = shape;
             _defaultMaterial = shape.Shape.Material;
 
@@ -239,8 +300,11 @@ namespace Starter3D.Plugin.UniverseSimulator
             _mass = 100;
             _position = position;
 
+            
+            _velLength = 1;
+            _velDir = Vector3.UnitX;
+            _velocity = _velDir * _velLength;
 
-            _velocity = Vector3.UnitX;
             _rotAxis = Vector3.UnitZ;
             _angularRot = 0;
             _angularVel = 0;
@@ -273,9 +337,17 @@ namespace Starter3D.Plugin.UniverseSimulator
             _axisTop = new Vertex(_position + _rotAxis * _radius * 1.4f, DummyVector3, DummyVector3);
             _axisLine.AddPoint(_axisBottom);
             _axisLine.AddPoint(_axisTop);
-            _axisLine.Configure(renderer);
+            _axisLine.Configure(_renderer);
             _axisAlignmentRot = TextureCorrection;
             _aroundAxisRot = Quaternion.Identity;
+
+            //velocity ball and line            
+            _velBall = velShape;
+            _velOrigin = new Vertex();
+            _velTip = new Vertex();
+            _velLine = new Curve("velLine" + _velLineCounter++, 2);
+            _velLine.Material = velMaterial;
+            UpdateVelocityLineAndBall();            
         }
 
         public CelestialBody() { }
@@ -290,6 +362,16 @@ namespace Starter3D.Plugin.UniverseSimulator
             //actualizar rotación
             UpdateRotation();
 
+        }
+
+        public void AlignVelocityWithPoint(Vector2 point) {
+            var dir = point - _position.Xy;
+            if (dir == Vector2.Zero) return;
+            _velDir.Xy = dir;
+            _velDir.Normalize();
+            _velocity = _velDir * _velLength;
+            UpdateVelocityLineAndBall();
+            RaiseVelocityChanged();
         }
 
         public void UpdateRotation()
@@ -320,6 +402,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         // (posición se setea por mouse)
         // (copiar shape produce bugs y no es necesario)
         // Actualmente lo uso en el CelestialBodyViewModel
+        /*
         public void CopyFrom(CelestialBody other)
         {
             if (other == null) return;
@@ -334,8 +417,9 @@ namespace Starter3D.Plugin.UniverseSimulator
             AngularVelocity = other._angularVel;
             RotationAxis = other._rotAxis;
             AxisAlignmentRotation = other._axisAlignmentRot;
-        }
+        }*/
 
+        /*
         public void Clone(CelestialBody other)
         {
             if (other == null) return;
@@ -361,9 +445,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             _axisAlignmentRot = TextureCorrection;
             _aroundAxisRot = Quaternion.Identity;
             _renderer = other._renderer;
-
-
         }
+         * */
 
 
         private void UpdateLightsPositions()
@@ -378,14 +461,13 @@ namespace Starter3D.Plugin.UniverseSimulator
             //_lightCenter.Position = _position;
         }
 
+        /*
         public void ToggleLightsInScene()
         {
-            if (_isLightInScene)
-                RemoveLightsFromScene();
-            else
-                AddLightsToScene();
+            if (_isLightInScene) RemoveLightsFromScene();
+            else AddLightsToScene();
         }
-
+        */
         public void AddLightsToScene()
         {
             if (_isLightInScene) return;
@@ -414,7 +496,19 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         }
 
-
+        public void UpdateVelocityLineAndBall()
+        {
+            _velLine.Clear();
+            _velOrigin.Position = _position;                
+            _velBallPos = _position + (2.2f * _radius) * _velDir;
+            _velTip.Position = _velBallPos;
+            _velBall.Position = _velBallPos;
+            _velBallRadius = _radius * 0.2f;
+            _velBall.Scale = new Vector3(_velBallRadius);
+            _velLine.AddPoint(_velOrigin);
+            _velLine.AddPoint(_velTip);
+            _velLine.Configure(_renderer);
+        }
 
         //retorna la posición menor de la bounding box
         public Vector3 BoundingBox_Min(Step step)
@@ -465,6 +559,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             _simulationBackup.Radius = _radius;
             _simulationBackup.RotAxis = _rotAxis;
             _simulationBackup.Velocity = _velocity;
+            _simulationBackup.VelocityDirection = _velDir;
+            _simulationBackup.VelocityLength = _velLength;
         }
 
         public void RestoreFromSimulationBackup()
@@ -484,6 +580,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             _radius = _simulationBackup.Radius;
             _rotAxis = _simulationBackup.RotAxis;
             _velocity = _simulationBackup.Velocity;
+            _velDir = _simulationBackup.VelocityDirection;
+            _velLength = _simulationBackup.VelocityLength;
 
             _nextPosition = _position;
             _nextVelocity = _velocity;
@@ -504,6 +602,10 @@ namespace Starter3D.Plugin.UniverseSimulator
 
             //axis
             UpdateAxisLine();
+
+            //velocity line and ball
+            UpdateVelocityLineAndBall();
+
         }
 
 
@@ -522,6 +624,11 @@ namespace Starter3D.Plugin.UniverseSimulator
                      new XElement("x", _velocity.X.ToString(invCul)),
                      new XElement("y", _velocity.Y.ToString(invCul)),
                      new XElement("z", _velocity.Z.ToString(invCul))),
+                new XElement("velDir",
+                     new XElement("x", _velDir.X.ToString(invCul)),
+                     new XElement("y", _velDir.Y.ToString(invCul)),
+                     new XElement("z", _velDir.Z.ToString(invCul))),
+                new XElement("velLength", _velLength.ToString(invCul)),
                  new XElement("rotAxis",
                      new XElement("x", _rotAxis.X.ToString(invCul)),
                      new XElement("y", _rotAxis.Y.ToString(invCul)),
@@ -559,7 +666,8 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         //para crear desde xml
         public static CelestialBody CreateFromXml(XElement element, IResourceManager resourceManager,
-            ShapeNode shape, IScene scene, IMaterial axisMaterial, IRenderer renderer)
+            ShapeNode shape, IScene scene, IMaterial axisMaterial, IRenderer renderer,
+            ShapeNode velShape, IMaterial velMaterial, UniverseSimulatorController controller)
         {
             //position
             Vector3 position = new Vector3();
@@ -574,6 +682,17 @@ namespace Starter3D.Plugin.UniverseSimulator
             velocity.X = float.Parse(prop.Element("x").Value, CultureInfo.InvariantCulture);
             velocity.Y = float.Parse(prop.Element("y").Value, CultureInfo.InvariantCulture);
             velocity.Z = float.Parse(prop.Element("z").Value, CultureInfo.InvariantCulture);
+
+            //velDir
+            Vector3 velDir = new Vector3();
+            prop = element.Element("velDir");
+            velDir.X = float.Parse(prop.Element("x").Value, CultureInfo.InvariantCulture);
+            velDir.Y = float.Parse(prop.Element("y").Value, CultureInfo.InvariantCulture);
+            velDir.Z = float.Parse(prop.Element("z").Value, CultureInfo.InvariantCulture);
+
+            //velLength
+            prop = element.Element("velLength");            
+            float velLength = float.Parse(prop.Value, CultureInfo.InvariantCulture);
 
             //rotAxis
             Vector3 rotAxis = new Vector3();
@@ -631,8 +750,11 @@ namespace Starter3D.Plugin.UniverseSimulator
             string materialName = prop.Value;
             IMaterial material = resourceManager.GetMaterial(materialName);
 
-            var cb = new CelestialBody(position, shape, scene, axisMaterial, renderer);
+            var cb = new CelestialBody(controller, position, shape, scene,
+                axisMaterial, renderer, velShape, velMaterial);
             cb.Velocity = velocity;
+            cb.VelocityLength = velLength;
+            cb.VelocityDirection = velDir;
             cb.RotationAxis = rotAxis;
             cb.AxisAlignmentRotation = axisAlignmentRot;
             cb._aroundAxisRot = aroundAxisRot;

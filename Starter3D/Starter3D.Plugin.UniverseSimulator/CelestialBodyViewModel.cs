@@ -57,41 +57,30 @@ namespace Starter3D.Plugin.UniverseSimulator
             {
                 if (_celestialBody == value) return;
 
-
-                /*if (_celestialBody != null && _saved == false)
-                    Reset();*/
+                if (_celestialBody != null)
+                    _celestialBody.VelocityChanged -= _celestialBody_VelocityChanged;
 
                 _celestialBody = value;
 
                 if (value == null)
                 {
-                    _hasCelestialBody = false;
                     _velAngle = 0;
                     _velMagnitude = 0;
+                    _hasCelestialBody = false;
                 }
                 else
                 {
-                    //_backup.CopyFrom(_celestialBody);
-                    var vxy = _celestialBody.Velocity.Xy;
-                    if (vxy == Vector2.Zero)
-                    {
-                        _velAngle = 0;
-                        _velMagnitude = 0;
-                    }
-                    else
-                    {
-                        _velAngle = Math.Atan2(vxy.Y, vxy.X);
-                        _velMagnitude = vxy.Length;
-                    }
+                    var velDir = _celestialBody.VelocityDirection;
+                    _velAngle = Math.Atan2(velDir.Y, velDir.X);
+                    _velMagnitude = _celestialBody.VelocityLength;
+                    _celestialBody.VelocityChanged += _celestialBody_VelocityChanged;
                     _hasCelestialBody = true;
                 }
-
-                //_saved = true;
-                //_hasChanges = false;
                 _feedback = "";
                 RaisePropertyChanged();
             }
         }
+
         /*
         public bool HasChanges
         {
@@ -172,19 +161,12 @@ namespace Starter3D.Plugin.UniverseSimulator
         
         public float VelocityMagnitude
         {
-            get { return _hasCelestialBody ? _velMagnitude : 0; }
+            get { return _hasCelestialBody ? _celestialBody.VelocityLength : 0; }
             set
             {
                 if (_celestialBody == null) return;
-                if (_velMagnitude == value) return;
-
-                _velMagnitude = value;
-                _velAux.X = (float)Math.Cos(_velAngle) * _velMagnitude;
-                _velAux.Y = (float)Math.Sin(_velAngle) * _velMagnitude;
-                _velAux.Z = 0;
-                _celestialBody.Velocity = _velAux;
-                _celestialBody.NextVelocity = _velAux;
-
+                if (_celestialBody.VelocityLength == value) return;
+                _celestialBody.VelocityLength = value;
                 RaisePropertyChanged("VelocityMagnitude");
             }
         }
@@ -203,11 +185,10 @@ namespace Starter3D.Plugin.UniverseSimulator
                 angle *= Math.PI / 180;
                 _velAngle = angle;
 
-                _velAux.X = (float) Math.Cos(angle) * _velMagnitude;
-                _velAux.Y = (float) Math.Sin(angle) * _velMagnitude;
+                _velAux.X = (float)Math.Cos(angle);
+                _velAux.Y = (float)Math.Sin(angle);
                 _velAux.Z = 0;
-                _celestialBody.Velocity = _velAux;
-                _celestialBody.NextVelocity = _velAux;
+                _celestialBody.VelocityDirection = _velAux;
 
                 RaisePropertyChanged("VelocityAngle");
                 RaisePropertyChanged("VelocityAngle_Negative");
@@ -356,11 +337,10 @@ namespace Starter3D.Plugin.UniverseSimulator
             _velAngle -= _rotAngle;
             if (_velAngle <= -_2PI) _velAngle += _2PI;
 
-            _velAux.X = (float)Math.Cos(_velAngle) * _velMagnitude;
-            _velAux.Y = (float)Math.Sin(_velAngle) * _velMagnitude;
+            _velAux.X = (float)Math.Cos(_velAngle);
+            _velAux.Y = (float)Math.Sin(_velAngle);
             _velAux.Z = 0;
-            _celestialBody.Velocity = _velAux;
-            _celestialBody.NextVelocity = _velAux;
+            _celestialBody.VelocityDirection = _velAux;
 
             RaisePropertyChanged("VelocityAngle");
             RaisePropertyChanged("VelocityAngle_Negative");
@@ -371,11 +351,10 @@ namespace Starter3D.Plugin.UniverseSimulator
             _velAngle += _rotAngle;
             if (_velAngle >= _2PI) _velAngle -= _2PI;
 
-            _velAux.X = (float)Math.Cos(_velAngle) * _velMagnitude;
-            _velAux.Y = (float)Math.Sin(_velAngle) * _velMagnitude;
+            _velAux.X = (float)Math.Cos(_velAngle);
+            _velAux.Y = (float)Math.Sin(_velAngle);
             _velAux.Z = 0;
-            _celestialBody.Velocity = _velAux;
-            _celestialBody.NextVelocity = _velAux;
+            _celestialBody.VelocityDirection = _velAux;
 
             RaisePropertyChanged("VelocityAngle");
             RaisePropertyChanged("VelocityAngle_Negative");
@@ -390,6 +369,15 @@ namespace Starter3D.Plugin.UniverseSimulator
 
 
         #endregion
+
+        void _celestialBody_VelocityChanged(Vector3 newDir, float newLength)
+        {
+            _velAngle = Math.Atan2(newDir.Y, newDir.X);
+            _velMagnitude = newLength;
+            RaisePropertyChanged("VelocityMagnitude");
+            RaisePropertyChanged("VelocityAngle");
+            RaisePropertyChanged("VelocityAngle_Negative");
+        }
 
     }
 }
