@@ -148,11 +148,11 @@ namespace Starter3D.API.scene.nodes
       deltaX = deltaX * 0.001f * movementDirection.Length;
       deltaY = deltaY * 0.001f * movementDirection.Length;
 
-      _position += leftVector * deltaX;
-      _target += leftVector * deltaX;
+      _position += leftVector * deltaX * Position.Z / 80;
+      _target += leftVector * deltaX * Position.Z / 80;
 
-      _position += upMovementDirection * deltaY;
-      _target += upMovementDirection * deltaY;
+      _position += upMovementDirection * deltaY * Position.Z / 80;
+      _target += upMovementDirection * deltaY * Position.Z / 80;
       _isDirty = true;
     }
 

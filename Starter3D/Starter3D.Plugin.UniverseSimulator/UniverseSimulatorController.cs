@@ -102,8 +102,8 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         private string _tooltipMessage = "";
 
-        private float _rotAngle = (float)(Math.PI / 180 * 2f);
-        private float _camVelocity = 30f;
+        private float _rotAngle = (float)(Math.PI / 180 * 1f);
+        private float _camVelocity = 50f;
         private CameraBackup _camBackup;
 
 
