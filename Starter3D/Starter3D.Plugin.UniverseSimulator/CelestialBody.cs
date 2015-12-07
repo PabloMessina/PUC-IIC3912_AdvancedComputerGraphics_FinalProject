@@ -323,7 +323,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             _shape.Position = _position;
             _shape.Rotation = TextureCorrection;
 
-            _lightUp = new PointLight(Color4.White);
+            _lightUp = new PointLight(Color4.Yellow);
             _lightDown = new PointLight(Color4.Yellow);
             _lightLeft = new PointLight(Color4.Yellow);
             _lightRight = new PointLight(Color4.Yellow);

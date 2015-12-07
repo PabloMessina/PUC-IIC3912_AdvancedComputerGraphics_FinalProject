@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" Height="52.293" Width="427.981">
+             mc:Ignorable="d" Height="52.293" Width="727.981">
     <Grid>
         <Slider Margin="131,10,0,0" HorizontalAlignment="Left" Width="171" Height="34" VerticalAlignment="Top" 
                 Minimum="{Binding SimulationTimeStepMinimum}" Maximum="{Binding SimulationTimeStepMaximum}"
@@ -11,5 +11,10 @@
         <TextBlock HorizontalAlignment="Left" Margin="307,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top"
                    Text="{Binding SimulationTimeStep, StringFormat={}{0} milliseconds}" Width="132"/>
         <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Simulation Time Step" VerticalAlignment="Top"/>
+
+        <Button Content="Previous" HorizontalAlignment="Left" Margin="500,10,0,0" VerticalAlignment="Top" Width="75" Click="Previous_Click"/>
+        <Button Content="Reset" HorizontalAlignment="Left" Margin="575,10,0,0" VerticalAlignment="Top" Width="75" Click="Reset_Click"/>
+        <Button Content="Next" HorizontalAlignment="Left" Margin="650,10,0,0" VerticalAlignment="Top" Width="75" Click="Next_Click"/>
+        <Label Content="Camera" HorizontalAlignment="Left" Margin="450,5,0,0" VerticalAlignment="Top"/>
     </Grid>
 </UserControl>

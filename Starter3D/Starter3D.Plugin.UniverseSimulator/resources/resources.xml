@@ -36,7 +36,6 @@
     <BaseMaterial key='redSpecular' shader='blinnPhong' diffuseColor='1,0,0' specularColor='1,1,1' shininess='100'/>
     <BaseMaterial key='blueDiffuse' shader='blinnPhong' diffuseColor='0,0,1' specularColor='0,0,0' shininess='0'/>
     <BaseMaterial key='yellowSpecular' shader='blinnPhong' diffuseColor='1,1,0' specularColor='1,1,1' shininess='100'/>
-    <!--<BaseMaterial key='redDiffuse' shader='blinnPhong' diffuseColor='1,0,0' specularColor='0,0,0' shininess='0'/>-->
     <BaseMaterial key='skyboxMaterial' shader='skyboxShader' cameraPosition='0,0,0' topTex='TopTex' rightTex='RightTex' leftTex='LeftTex' bottomTex='BottomTex' frontTex='FrontTex' backTex='BackTex'/>
     <BaseMaterial key='yellow' shader='plainColorShader' color='1,1,0'/>
     <BaseMaterial key='orangeDiffuse' shader='blinnPhong' diffuseColor='1,0.55,0' specularColor='0,0,0' shininess='0'/>

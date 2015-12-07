@@ -92,7 +92,7 @@ namespace Starter3D.Plugin.UniverseSimulator
         //Simulación
         private bool _simulationRunning = false;
         private bool _pauseSimulation = false;
-
+        private int _currentPlanet = -2;
         private HashSet<CelestialBody> _gravitySources = new HashSet<CelestialBody>();
 
         //Skybox
@@ -430,7 +430,7 @@ namespace Starter3D.Plugin.UniverseSimulator
             _leftView = new LeftToolView(this);
             _rightView = new RightToolView();
             _bottomView = new BottomToolView();
-            _topView = new TopToolView();
+            _topView = new TopToolView(this);
 
             //inicializamos el solver
             _solver = new PhysicsSolver();
@@ -563,6 +563,31 @@ namespace Starter3D.Plugin.UniverseSimulator
 
         public void Update(double deltaTime)
         {
+            var cam = _scene.CurrentCamera as PerspectiveCamera;
+            if (_simulationRunning && (cam != null))
+            {                
+                if (_currentPlanet == -2)
+                {
+                    cam.Position = _camBackup.Position;
+                    cam.Target = _camBackup.Target;
+                    cam.Up = _camBackup.Up;
+                    _currentPlanet = -1;
+                }
+                else if (_currentPlanet >= 0)
+                {
+                    try
+                    {
+                        var delta = cam.Position - _celestialBodies[_currentPlanet].Position;
+                        cam.Position = _celestialBodies[_currentPlanet].Position - Vector3.One * _celestialBodies[_currentPlanet].Radius;
+                    }
+                    catch (Exception)
+                    {
+                        _currentPlanet = 0;                        
+                    }
+                    
+                    //cam.Target = cam.Target - delta;
+                }
+            }
             if (_simulationRunning && !_pauseSimulation)
             {
                 //ejecutamos métodos de simulación
@@ -999,6 +1024,26 @@ namespace Starter3D.Plugin.UniverseSimulator
         }
 
         #region Métodos para manejar entrada y salida de modo
+        
+        public void NextCamera()
+        {
+            _currentPlanet++;
+            if (_currentPlanet > _celestialBodies.Count - 1)
+                _currentPlanet = 0;
+        }
+
+        public void PreviousCamera()
+        {
+            _currentPlanet--;
+            if (_currentPlanet < 0)
+                _currentPlanet = _celestialBodies.Count - 1;
+        }
+
+        public void ResetCamera()
+        {
+            _currentPlanet = -2;
+        }
+        
         //los métodos son autoexplicativos
         public void SetMode(Mode mode)
         {
@@ -1030,7 +1075,8 @@ namespace Starter3D.Plugin.UniverseSimulator
             TooltipMessage = "Press ESC to exit. Use right click to rotate the camera view and keys a, s, d, w, q, e, 2, 3 to move the camera around. Press p to pause/continue simulation";
             _leftView.Hide();
             _rightView.Hide();
-
+            _topView.Show();
+            //_scene.Lights.First().Color = new OpenTK.Graphics.Color4(0.1F, 0.1F, 0.1F, 1F);
 
             //backupear cámara
             var cam = _scene.CurrentCamera;
@@ -1078,6 +1124,9 @@ namespace Starter3D.Plugin.UniverseSimulator
 
             _leftView.Show();
             _rightView.Show();
+            _topView.Hide();
+            _scene.Lights.First().Color = new OpenTK.Graphics.Color4(0.5F, 0.5F, 0.5F, 1);
+            _currentPlanet = -2;
 
             //devolver cámara a su estado original
             var cam = _scene.CurrentCamera;

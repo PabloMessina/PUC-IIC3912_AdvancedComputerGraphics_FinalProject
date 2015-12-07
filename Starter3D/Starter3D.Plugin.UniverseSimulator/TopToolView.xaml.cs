@@ -20,9 +20,44 @@ namespace Starter3D.Plugin.UniverseSimulator
     /// </summary>
     public partial class TopToolView : UserControl
     {
-        public TopToolView()
+        private UniverseSimulatorController _controller;
+
+        public TopToolView(UniverseSimulatorController controller)
         {
             InitializeComponent();
+            _controller = controller;
+            this.Visibility = System.Windows.Visibility.Collapsed;
         }
+
+        public void Hide()
+        {
+            this.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+        public void Show()
+        {
+            this.Visibility = System.Windows.Visibility.Visible;
+        }
+                
+        private void Previous_Click(object sender, RoutedEventArgs e)
+        {
+            if (_controller != null)
+                _controller.PreviousCamera();
+        }
+
+        private void Reset_Click(object sender, RoutedEventArgs e)
+        {
+            if (_controller != null)
+                _controller.ResetCamera();
+        }
+
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            if (_controller != null)
+                _controller.NextCamera();
+        }
+        
     }
+
+
 }
